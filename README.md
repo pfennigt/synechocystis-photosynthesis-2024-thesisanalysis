@@ -96,7 +96,7 @@ Thank you for your contribution to the project!
 - [Andreas Nakielski](https://www.cpbl.rwth-aachen.de/cms/CPBL/Die-Juniorprofessur/Unser/~ylubj/Andreas-Nakielski/) ([@AndreasNakielski](https://gitlab.com/AndreasNakielski))
 - [Tomáš Zavřel](https://www.czechglobe.cz/en/contacts/144/)
 - [Jan Červený](https://www.czechglobe.cz/en/contacts/145/)
-- [Gábor Bernát](https://www.blki.hu/en/Gabor.BERNAT)
+- [Gábor Bernát](https://www.blki.hun-ren.hu/en/Gabor.BERNAT)
 
 ## License
 

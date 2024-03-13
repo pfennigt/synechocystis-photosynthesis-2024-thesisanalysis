@@ -13,7 +13,7 @@ import warnings
 
 import functions as fnc
 from functions_fluorescence_simulation import make_lights
-import submodules.lightdescription.light_with_pigments as lip
+import light_with_pigments as lip
 
 Array: TypeAlias = NDArray[np.float64]
 ArrayLike = Union[NDArray[np.float64], List[float]]

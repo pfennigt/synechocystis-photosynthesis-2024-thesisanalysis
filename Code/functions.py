@@ -1,5 +1,5 @@
 ### Import packages and functions ###
-from datetime import date
+from datetime import datetime
 from math import gcd
 from typing import Union, List, Dict, cast
 import dill
@@ -1456,7 +1456,7 @@ def plot_model_comparison(s1, s2, comp):
 
 
 # Save figures
-def savefig_dated(fig, name, type=None, path="figures", format="%Y%m%d", **kwargs):
+def savefig_dated(fig, name, type=None, path="figures", format="%Y%m%d%H%M", **kwargs):
     """Save a figure with the current date as prefix
 
     Args:
@@ -1465,7 +1465,7 @@ def savefig_dated(fig, name, type=None, path="figures", format="%Y%m%d", **kwarg
         name (str): The name the figure should be saved to excluding the prefix
     """
     # Create the path
-    now = date.today().strftime(format)
+    now = datetime.now().strftime(format)
 
     if type is None:
         # Save the figure
@@ -1963,9 +1963,9 @@ def _search_Simulators(obj, i):
     return False
 
 
-def save_obj_dated(obj, name, path="", method="dill"):
+def save_obj_dated(obj, name, path="", method="dill", format="%Y%m%d%H%M"):
     suffix = _get_suffix(method)
-    now = date.today().strftime("%Y%m%d")
+    now = datetime.now().strftime(format)
     fullpath_ns = f"{path}/{now}_{name}"
     fullpath = f"{fullpath_ns}.{suffix}"
 
@@ -1981,7 +1981,7 @@ def save_obj_dated(obj, name, path="", method="dill"):
         raise ValueError(f"method {method} unsupported")
 
 
-def _get_filepath_dated(name, suffix=None, path="", date=None):
+def _get_filepath_dated(name, suffix=None, path="", date=None, datelength=12):
     if suffix is not None:
         suffix = f".{suffix}"
     else:
@@ -1994,7 +1994,7 @@ def _get_filepath_dated(name, suffix=None, path="", date=None):
             files[
                 np.array(
                     [
-                        bool(re.match(f"[0-9]{{8}}_{name}{suffix}$", file))
+                        bool(re.match(f"[0-9]{{{datelength}}}_{name}{suffix}$", file))
                         for file in files
                     ]
                 )
@@ -2003,7 +2003,7 @@ def _get_filepath_dated(name, suffix=None, path="", date=None):
 
         if len(matches) == 0:
             raise FileNotFoundError(
-                f"No file with the structure 'XXXXXXXX_{name}{suffix}' found in {path}"
+                f"No file with the structure '{'X'*datelength}_{name}{suffix}' found in {path}"
             )
 
         fullpath = f"{path}/{matches[-1]}"
@@ -2014,9 +2014,9 @@ def _get_filepath_dated(name, suffix=None, path="", date=None):
     return fullpath_ns, fullpath
 
 
-def load_obj_dated(name, path="", date=None, method="dill"):
+def load_obj_dated(name, path="", date=None, method="dill", datelength=12):
     suffix = _get_suffix(method)
-    fullpath_ns, fullpath = _get_filepath_dated(name, suffix, path, date)
+    fullpath_ns, fullpath = _get_filepath_dated(name, suffix, path, date, datelength)
 
     # Get the file
     if method == "dill":
@@ -2059,10 +2059,10 @@ def _convert_Simulator_for_save(s, save_fluxes=False, save_full_results=False):
 
 
 def save_Simulator_dated(
-    s, name, path, method="pickle", save_fluxes=False, save_full_results=False
+    s, name, path, method="pickle", save_fluxes=False, save_full_results=False, format="%Y%m%d%H%M"
 ):
     suffix = _get_suffix(method)
-    now = date.today().strftime("%Y%m%d")
+    now = datetime.now().strftime(format)
     fullpath_ns = f"{path}/{now}_{name}"
     fullpath = f"{fullpath_ns}.{suffix}"
 
@@ -2121,10 +2121,10 @@ def _create_Simulator_for_load(to_import):
     return s
 
 
-def load_Simulator_dated(name, path, date=None, method="pickle"):
+def load_Simulator_dated(name, path, date=None, method="pickle", datelength=12):
     # Replace the dill method with pickle for default saving
     suffix = _get_suffix(method)
-    fullpath_ns, fullpath = _get_filepath_dated(name, suffix, path, date)
+    fullpath_ns, fullpath = _get_filepath_dated(name, suffix, path, date, datelength)
 
     if method == "json":
         with open(fullpath, "r") as f:

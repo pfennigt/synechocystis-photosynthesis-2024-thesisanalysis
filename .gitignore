@@ -1,0 +1,9 @@
+# ignore jupyter checkpoints
+**/.ipynb_checkpoints/*
+**/__pycache__/*
+
+# ignore figures
+Figures/*
+
+# ignore vscode files
+.vscode

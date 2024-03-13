@@ -1,4 +1,4 @@
-name: test
+name: synphot
 channels:
   - conda-forge
   - defaults
@@ -167,4 +167,3 @@ dependencies:
       - pre-commit==2.21.0
       - pyyaml==6.0
       - virtualenv==20.17.1
-prefix: /home/tobias/anaconda3/envs/test

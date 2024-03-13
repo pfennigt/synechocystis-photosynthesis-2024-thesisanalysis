@@ -39,7 +39,7 @@ conda env create -f environment.yml
 ```
 4. Activate the environment:
 ```console
-conda activate synechocystis-etc-2022
+conda activate synphot
 ```
 5. Now you can run the notebooks without worrying about missing dependencies.
 

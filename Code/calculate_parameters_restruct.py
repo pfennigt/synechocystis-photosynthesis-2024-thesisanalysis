@@ -11,7 +11,7 @@ import pandas as pd
 import module_rubisco_reactions as CBB
 
 # Import light description module
-from light_with_pigments import pigments_Fuente
+from functions_light_absorption import pigments_Fuente
 
 # CHANGE LOG
 # 000            | original model by elena

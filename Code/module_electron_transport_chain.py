@@ -9,7 +9,7 @@ from modelbase.ode import ratefunctions as rf
 from modelbase.ode import ratelaws as rl
 from sympy import Matrix, Tuple, lambdify, linsolve, symbols
 
-import light_with_pigments as lip
+import functions_light_absorption as lip
 import parameters
 
 # CHANGE LOG

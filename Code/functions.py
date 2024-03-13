@@ -22,7 +22,7 @@ from tqdm.notebook import tqdm
 
 from warnings import warn
 
-import light_with_pigments as lip
+import functions_light_absorption as lip
 
 # CHANGE LOG
 # 014 28.02.2022 | moved most functions from notebooks to this file for common usage

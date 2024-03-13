@@ -1,5 +1,5 @@
 import functions as fnc
-import light_with_pigments as lip
+import functions_light_absorption as lip
 
 # Set the cuvette width for light adjustment to cellular absorption
 cuvette_width = 0.01  # [m]

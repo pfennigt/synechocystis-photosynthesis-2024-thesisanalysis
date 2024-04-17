@@ -4,6 +4,8 @@
 
 # ignore figures
 Figures/*
+Results/*
+!Results/README.md
 
 # ignore vscode files
 .vscode

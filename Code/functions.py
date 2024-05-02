@@ -1745,6 +1745,7 @@ def simulate_protocol(
     return_unsuccessful=False,
     retry_unsuccessful=False,
     retry_kwargs=simulator_kwargs["loose"],
+    n_timepoints = None,
     **integrator_kwargs,
 ):
     # Set the current end time
@@ -1771,7 +1772,13 @@ def simulate_protocol(
         # Get the new light parameter
         pfd = get_light(row)
         s.update_parameter("pfd", pfd)
-        t, y = s.simulate(row["t_end"], **integrator_kwargs)
+
+        # Simulate until the given end-time
+        # If a number of points to be evaluated is given, generate the necessary points
+        if n_timepoints is None:
+            t, y = s.simulate(row["t_end"], **integrator_kwargs)
+        else:
+            t, y = s.simulate(row["t_end"], steps=n_timepoints, **integrator_kwargs)
 
         if t is None:
             warn(f"simulation step {i} to t = {row['t_end']} was unsuccessfull")

@@ -724,6 +724,9 @@ data_points_val["right"] = pamdata_select.loc[Fm_timings + point_timing[1]]
 
 def calculate_residuals(
         parameter_update={},
+        thread_index=-1,
+        intermediate_results_file="residuals_intermediate.csv",
+        logger_filename="residuals",
         Schuurmans=Schuurmans,
         Benschop_CO2pps=Benschop_CO2pps,
         Benschop_CO2uMs=Benschop_CO2uMs,
@@ -738,9 +741,6 @@ def calculate_residuals(
         integrator_kwargs=integrator_kwargs,
         residual_normalisation=residual_normalisation,
         residual_relative_weights=residual_relative_weights,
-        calculation_index=-1,
-        logger_filename="residuals",
-        
         ):
     # Set up logging
     ErrorLogger = setup_logger("ErrorLogger", Path(f"{logger_filename}_err.log"), level=logging.ERROR)
@@ -1181,19 +1181,24 @@ def calculate_residuals(
         residual = (pd.Series(residuals) / residual_weights).mean()
 
         # %%
-        residual
-
-        # %%
         end_time = datetime.now()
+        InfoLogger.info(f"{thread_index} successfully finished in {end_time - start_time}")
 
-        InfoLogger.info(f"{calculation_index} successfully finished in {end_time - start_time}")
+        # Save the results to an intermediates file
+        with open(Path(intermediate_results_file), "a") as f:
+            f.writelines(f"{thread_index},{residual}\n")
 
         return residual
     
     # If an error was encountered warn and return NaN
     except Exception as e:
         # Warn and log the error
-        warnings.warn(f"Error encountered in {calculation_index}: {e}")
-        InfoLogger.info(f"{calculation_index} encountered an error")
-        ErrorLogger.error(f"Error encountered in {calculation_index}\n" + str(traceback.format_exc()))
+        warnings.warn(f"Error encountered in {thread_index}: {e}")
+        InfoLogger.info(f"{thread_index} encountered an error")
+        ErrorLogger.error(f"Error encountered in {thread_index}\n" + str(traceback.format_exc()))
+
+        # Save the results to an intermediates file
+        with open(Path(intermediate_results_file), "a") as f:
+            f.writelines(f"{thread_index},{np.nan}\n")
+
         return np.nan

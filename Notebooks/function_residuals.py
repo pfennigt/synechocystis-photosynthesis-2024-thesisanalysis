@@ -150,7 +150,7 @@ def get_pathways_at_lights(model, y0, lights, intens):
             simulation_kwargs={
                 "t_end": 1e6,
                 "tolerances": [[["CBBa", "PSII", "OCP"], 1e-7], [None, 1e-6]],
-                "verbose": True,
+                "verbose": False,
             },
             rel_norm=True,
             return_simulator=True,
@@ -210,7 +210,7 @@ def get_ssflux(m, y0, lightfun, target, light_params, tolerance=1e-4, rel_norm=F
         simulation_kwargs={
             "t_end": 1e6,
             "tolerances": [[["CBBa", "PSII", "OCP"], 1e-7], [None, 1e-6]],
-            "verbose": True,
+            "verbose": False,
         },
         rel_norm=True,
         return_simulator=True,
@@ -1193,7 +1193,7 @@ def calculate_residuals(
     # If an error was encountered warn and return NaN
     except Exception as e:
         # Warn and log the error
-        warnings.warn(f"Error encountered in {thread_index}: {e}")
+        # warnings.warn(f"Error encountered in {thread_index}: {e}")
         InfoLogger.info(f"{thread_index} encountered an error")
         ErrorLogger.error(f"Error encountered in {thread_index}\n" + str(traceback.format_exc()))
 

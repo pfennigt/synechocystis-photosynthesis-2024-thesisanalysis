@@ -1304,10 +1304,10 @@ def calculate_residuals(
 
         residual_functions = [
             calculate_residuals_ePathways,
-            # calculate_residuals_Schuurmans,
-            # calculate_residuals_Benschop,
-            # calculate_residuals_PAMSP435,
-            # calculate_residuals_PAMSPval
+            calculate_residuals_Schuurmans,
+            calculate_residuals_Benschop,
+            calculate_residuals_PAMSP435,
+            calculate_residuals_PAMSPval
         ]
 
         residuals = []

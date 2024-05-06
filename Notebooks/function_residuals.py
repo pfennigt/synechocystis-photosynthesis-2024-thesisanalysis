@@ -9,6 +9,7 @@ import pandas as pd
 import sys
 import re
 import warnings
+import pebble
 
 import traceback
 import logging
@@ -118,12 +119,13 @@ formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 def setup_logger(name, log_file, level=logging.INFO):
     """To setup as many loggers as you want"""
 
-    handler = logging.FileHandler(log_file)        
-    handler.setFormatter(formatter)
-
     logger = logging.getLogger(name)
     logger.setLevel(level)
-    logger.addHandler(handler)
+
+    if len(logger.handlers) == 0:
+        handler = logging.FileHandler(log_file)        
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
     return logger
 
@@ -722,11 +724,551 @@ data_points_val["right"] = pamdata_select.loc[Fm_timings + point_timing[1]]
 # %% [markdown]
 # # Modelling
 
+
+def calculate_residuals_ePathways(
+        parameter_update,
+        Schuurmans,
+        Benschop_CO2pps,
+        Benschop_CO2uMs,
+        Benschop2003_low,
+        experiment_select_435,
+        absorption_coef_PAM435,
+        data_points_435,
+        strain_params,
+        data_points_val,
+        point_timing,
+        fraction_simulated_points,
+        integrator_kwargs,
+        ):
+    # Create container for the residuals
+    residuals = {}
+
+    intens = np.linspace(100, 320, int(10 * fraction_simulated_points))
+    lights = [lip.light_gaussianLED(670, i) for i in intens]
+
+    # Simulate Wild Type and different mutants
+    # Standard model
+    m, y0 = get_model(check_consistency=False, verbose=False)
+
+    # Update the parameters to the current set
+    m.update_parameters(parameter_update)
+
+    pathways, sims = get_pathways_at_lights(m, y0, lights, intens)
+    # fnc.save_Simulator_dated(sims, f"resid_epaths_sims", results_path)
+    # fnc.save_obj_dated(pathways, "resid_epaths_paths", results_path)
+
+    # Get the mean LET fraction
+    let_frac = (pathways.T / pathways.sum(axis=1)).T["linear"]
+
+    # Residuals with target value 65%
+    residuals["LET_fraction"] = np.linalg.norm(let_frac - 0.65, ord=2)
+
+    # Get the Let flux per PSI
+    norm = m.get_parameter("PSItot") * 3  # Normalise to PS1 monomers
+    let_flux = pathways["linear"].iloc[-1] / norm
+
+    # Residuals with target value 65%
+    residuals["LET_flux"] = np.abs(let_flux - 15)
+
+    return pd.Series(residuals)
+
+
+def calculate_residuals_Schuurmans(
+        parameter_update,
+        Schuurmans,
+        Benschop_CO2pps,
+        Benschop_CO2uMs,
+        Benschop2003_low,
+        experiment_select_435,
+        absorption_coef_PAM435,
+        data_points_435,
+        strain_params,
+        data_points_val,
+        point_timing,
+        fraction_simulated_points,
+        integrator_kwargs,
+        ):
+    # Create container for the residuals
+    residuals = {}
+
+    # ## 2) Schuurmans Oxygen and CO2 fluxes (Figure 6)
+
+    # %%
+    # Define the simulated lights
+    intens = Schuurmans.index.to_numpy()
+    lights = [lip.light_gaussianLED(625, i) for i in intens]
+
+    # Standard model
+    m, y0 = get_model(check_consistency=False, verbose=False)
+
+    # Update the parameters to the current set
+    m.update_parameters(parameter_update)
+
+    # Adjust the lights to in-culture conditions (2 mg(Chl) l^-1 according to Schuurmans)
+    MChl = 893.509  # [g mol^-1]
+    absorption_coef_Schuurmans = (
+        lip.get_pigment_absorption(m.parameters["pigment_content"]).sum(axis=1) * MChl
+    )
+    lights = lip.get_mean_sample_light(
+        lights,  # [µmol(Photons) m^-2 s^-1]
+        depth=0.01,  # [m]
+        absorption_coef=absorption_coef_Schuurmans,
+        chlorophyll_sample=(
+            2 / MChl * 1e3  # [mg(Chl) l^-1] (Schuurmans2014)  # [mol g^-1]
+        ),  # [mmol(Chl) m^-3]
+    )
+
+    # If a lower fraction of simulated points is given, select fewer points
+    if fraction_simulated_points < 1:
+        lights_select = slice(0, len(lights), int(fraction_simulated_points**-1))
+    else:
+        lights_select = slice(None)
+    # Calculate the pathways for the specified lights
+    pathways, sims = get_pathways_at_lights(
+        m, y0, lights[lights_select], intens[lights_select]
+    )
+
+    # Get the O2 and CO2 rates for Wild Type
+    gasrates = pd.concat([get_O2andCO2rates(s).iloc[-1, :] for s in sims], axis=1)
+    gasrates.columns = intens[lights_select].astype(int)
+    # fnc.save_obj_dated(gasrates, "resid_Schuurmans_gasrates", results_path)
+
+    # Calculate the Root mean squared error (RMSE)
+    res = gasrates.T.loc[:, ["O2_production", "O2_consumption"]] * prm.unit_conv(
+        ["mmol mol(Chl)-1 -> mmol g(Chl)-1", "s-1 -> min-1"]
+    )
+    res = res - Schuurmans.loc[res.index, :]
+    residuals["Schuurmans_O2"] = (res**2).mean().mean() ** 0.5
+
+    return pd.Series(residuals)
+
+
+def calculate_residuals_Benschop(
+        parameter_update,
+        Schuurmans,
+        Benschop_CO2pps,
+        Benschop_CO2uMs,
+        Benschop2003_low,
+        experiment_select_435,
+        absorption_coef_PAM435,
+        data_points_435,
+        strain_params,
+        data_points_val,
+        point_timing,
+        fraction_simulated_points,
+        integrator_kwargs,
+        ):
+    
+    # Create container for the residuals
+    residuals = {}
+    # ## 3) Benschop O2 data
+
+    # %%
+    # Adapt a model so that no compounds accumulate or drain
+    # Define a dictionary with all compounds that should be held constant
+    exch_dict = {
+        "3PGA": {"k": 10, "thresh": 1000},
+    }
+
+    # Define the MCA model by adding a flux keeping 3PGA constant
+    m_MCA, y0 = get_model(check_consistency=False, verbose=False)
+    m_MCA = fnc.add_exchange(m_MCA, exch_dict)
+
+    # Update the parameters to the current set
+    m_MCA.update_parameters(parameter_update)
+
+    # If a lower fraction of simulated points is given, select fewer points
+    if fraction_simulated_points < 1:
+        CO2_select = slice(0, len(Benschop_CO2pps), int(fraction_simulated_points**-1))
+    else:
+        CO2_select = slice(None)
+
+    O2s = pd.Series(np.nan, index=Benschop_CO2uMs[CO2_select])
+    for CO2pp, CO2uM in zip(Benschop_CO2pps[CO2_select], Benschop_CO2uMs[CO2_select]):
+        m_MCA.update_parameters(
+            {
+                "CO2ext_pp": CO2pp,
+            }
+        )
+
+        _O2s = get_ssflux(
+            m_MCA,
+            y0,
+            lip.light_spectra,
+            "vO2out",
+            ("cool_white_led", 800),
+        )
+
+        O2s.loc[CO2uM] = _O2s
+
+    # fnc.save_obj_dated(O2s, "resid_Benschop_O2", results_path)
+
+    # Calculate the Root mean squared error (RMSE)
+    res = O2s * unit_conv(["mmol mol(Chl)-1 -> mmol g(Chl)-1", "s-1 -> h-1"])
+    res = res - Benschop2003_low.iloc[CO2_select, 0]
+    residuals["Benschop_O2"] = (res**2).mean() ** 0.5
+
+    return pd.Series(residuals)
+
+
+def calculate_residuals_PAMSP435(
+        parameter_update,
+        Schuurmans,
+        Benschop_CO2pps,
+        Benschop_CO2uMs,
+        Benschop2003_low,
+        experiment_select_435,
+        absorption_coef_PAM435,
+        data_points_435,
+        strain_params,
+        data_points_val,
+        point_timing,
+        fraction_simulated_points,
+        integrator_kwargs,
+        ):
+    # Create container for the residuals
+    residuals = {}
+
+    # ## 4) Original 435 nm PAM-SP experiment
+
+    # %% [markdown]
+    # ### Get the PAM and strain data
+
+    # %% [markdown]
+    # ### Model the data
+
+    # %%
+    # Container for the simulated points
+    sim_points = pd.DataFrame(
+        np.nan, index=data_points_435["Fm'"].index, columns=["Fm'", "left", "right"]
+    )
+
+    # %% [markdown]
+    # ### Simulate the 435 nm experiment (with low blue phase after red)
+
+    # %%
+    # Select the measurement to simulate
+    growthlight = int(experiment_select_435[-3:])
+
+    strain_param = strain_params[str(growthlight)]["params"]
+    cuvette_Chlconc_PAM435 = strain_params[str(growthlight)]["cuvette_Chlconc"]
+    absorption_coef_PAM435 = strain_params[str(growthlight)]["absorption_coef"]
+
+    # Get the latest model version
+    m4, y0 = get_model(check_consistency=False, reduced_size=False, verbose=False)
+
+    # ADAPTION TO THE STRAIN
+    y0.update({"PSII": strain_param["PSIItot"]})
+    m4.update_parameters(strain_param)
+
+    # Change the CO2 concentration to 400ppm as experiments were conducted in air
+    m4.update_parameter("CO2ext_pp", 0.0004)
+
+    # Update the parameters to the current set
+    m4.update_parameters(parameter_update)
+
+    # Initialise the model
+    s_435 = Simulator(m4)
+    s_435.initialise(y0)
+
+    # Simulate the appropriate protocol
+    pulse_pfdm4 = 2600 * 2
+    lights_lowpulse = make_adjusted_lights(
+        absorption_coef=absorption_coef_PAM435,
+        chlorophyll_sample=cuvette_Chlconc_PAM435,
+        lights=make_lights(pulseInt=pulse_pfdm4, blue_wl=480),
+    )
+    if experiment_select_435.startswith("PSII kinetics, NPQ at state 2"):
+        protocol_435 = create_protocol_noNPQ(*lights_lowpulse)
+    else:
+        protocol_435 = create_protocol_NPQ(*lights_lowpulse)
+
+    s_435 = fnc.simulate_protocol(
+        s_435,
+        protocol_435,
+        retry_unsuccessful=True,
+        retry_kwargs=integrator_kwargs["retry"],
+        n_timepoints=10,
+        **integrator_kwargs["default"],
+    )
+
+    # %%
+    # Determine the Fm' timings (SP pulses have intensity > 2000)
+    SP_bool = (
+        protocol_435.loc[:, protocol_435.columns.str.startswith("_light")].apply(
+            simpson, axis=1
+        )
+        > 2000
+    ).to_numpy()
+
+    SP_times = pd.DataFrame(
+        {
+            "start": protocol_435.iloc[:-1].loc[SP_bool[1:], "t_end"].to_numpy(),
+            "end": protocol_435.loc[SP_bool, "t_end"].to_numpy(),
+        }
+    )
+
+    # %%
+    # Get the simulated fluorescence normalized to 1
+    fluo = s_435.get_full_results_df()["Fluo"]
+    fluo = fluo / fluo.max()
+
+    # %%
+    # Get the respective values from the simulated data
+    for i, (start, end) in SP_times.iterrows():
+        peak_time = fluo.loc[start:end].idxmax()
+
+        # Get the FM' value and values to the left and right
+        sim_points.iloc[i, 0] = fluo.loc[peak_time]
+
+        for j, offset in enumerate(point_timing):
+            point_time = peak_time + offset
+            nearest_time = bisect_left(fluo.index, point_time)
+            sim_points.iloc[i, j + 1] = fluo.loc[
+                fluo.index[[nearest_time, nearest_time + 1]]
+            ].mean()
+
+    # %%
+    # Calculate the residuals for all three points
+    for col in sim_points.columns:
+        residuals[f"PAMSP435_{col}"] = (
+            (
+                data_points_435[col].subtract(sim_points[col].to_numpy(), axis=0) ** 2
+            ).mean()
+            ** (0.5)
+        ).mean()
+
+    return pd.Series(residuals)
+
+
+def calculate_residuals_PAMSPval(
+        parameter_update,
+        Schuurmans,
+        Benschop_CO2pps,
+        Benschop_CO2uMs,
+        Benschop2003_low,
+        experiment_select_435,
+        absorption_coef_PAM435,
+        data_points_435,
+        strain_params,
+        data_points_val,
+        point_timing,
+        fraction_simulated_points,
+        integrator_kwargs,
+        ):
+    # Create container for the residuals
+    residuals = {}
+
+    # ## 5) Validation PAM-SP experiment
+
+    # %%
+    # Container for the simulated points
+    sim_points = pd.DataFrame(
+        np.nan, index=data_points_val["Fm'"].index, columns=["Fm'", "left", "right"]
+    )
+
+    # %%
+    # Protocol of the validation experiment
+    dark, low_blue, high_blue, orange, pulse_orange, pulse_blue = make_lights(
+        blueInt=80,
+        orangeInt=50,
+        highblueInt=1800,
+        pulseInt=15000,
+        orange_wl=625,
+        blue_wl=440,
+    )
+    pulse_white = lip.light_spectra("cool_white_led", 15000)
+
+    # Dark acclimation
+    protocol_val = fnc.create_protocol_const(light=dark, time=300)
+
+    # Dark phase
+    protocol_val = fnc.create_protocol_PAM(
+        init=protocol_val,
+        actinic=(dark, 30 - 0.6),  # Actinic light intensity and duration
+        saturating=(
+            pulse_white,
+            0.6,
+        ),  # Saturating pulse light intensity and duration
+        cycles=4,
+        final_actinic_time=5,
+    )
+
+    # Blue phase
+    protocol_val = fnc.create_protocol_PAM(
+        init=protocol_val,
+        actinic=(low_blue, 30 - 0.6),  # Actinic light intensity and duration
+        saturating=(
+            pulse_white,
+            0.6,
+        ),  # Saturating pulse light intensity and duration
+        cycles=6,
+        first_actinic_time=25,
+        final_actinic_time=5,
+    )
+
+    # Orange phase
+    protocol_val = fnc.create_protocol_PAM(
+        init=protocol_val,
+        actinic=(orange, 30 - 0.6),  # Actinic light intensity and duration
+        saturating=(
+            pulse_white,
+            0.6,
+        ),  # Saturating pulse light intensity and duration
+        cycles=10,
+        first_actinic_time=25,
+        final_actinic_time=5,
+    )
+
+    # Blue phase
+    protocol_val = fnc.create_protocol_PAM(
+        init=protocol_val,
+        actinic=(low_blue, 30 - 0.6),  # Actinic light intensity and duration
+        saturating=(
+            pulse_white,
+            0.6,
+        ),  # Saturating pulse light intensity and duration
+        cycles=6,
+        first_actinic_time=25,
+        final_actinic_time=5,
+    )
+
+    # High blue phase
+    protocol_val = fnc.create_protocol_PAM(
+        init=protocol_val,
+        actinic=(high_blue, 30 - 0.6),  # Actinic light intensity and duration
+        saturating=(
+            pulse_white,
+            0.6,
+        ),  # Saturating pulse light intensity and duration
+        cycles=6,
+        first_actinic_time=25,
+        final_actinic_time=5,
+    )
+
+    # Blue phase
+    protocol_val = fnc.create_protocol_PAM(
+        init=protocol_val,
+        actinic=(low_blue, 30 - 0.6),  # Actinic light intensity and duration
+        saturating=(
+            pulse_white,
+            0.6,
+        ),  # Saturating pulse light intensity and duration
+        cycles=6,
+        first_actinic_time=25,
+        final_actinic_time=5,
+    )
+
+    # Simulate the validation experiment
+    m, y0 = get_model(verbose=False, check_consistency=False)
+
+    # Update the parameters to the current set
+    m.update_parameters(parameter_update)
+
+    s_val = Simulator(m)
+    s_val.initialise(y0)
+
+    # The culture is grown under 1% CO2
+    s_val.update_parameter("CO2ext_pp", 0.01)
+
+    s_val = fnc.simulate_protocol(
+        s_val,
+        protocol_val,
+        retry_unsuccessful=True,
+        retry_kwargs=integrator_kwargs["retry"],
+        n_timepoints=10,
+        **integrator_kwargs["default"],
+    )
+
+    # %%
+    # Determine the Fm' timings (SP pulses have intensity > 2000)
+    SP_bool = (
+        protocol_val.loc[:, protocol_val.columns.str.startswith("_light")].apply(
+            simpson, axis=1
+        )
+        > 2000
+    ).to_numpy()
+
+    SP_times = pd.DataFrame(
+        {
+            "start": protocol_val.iloc[:-1].loc[SP_bool[1:], "t_end"].to_numpy(),
+            "end": protocol_val.loc[SP_bool, "t_end"].to_numpy(),
+        }
+    )
+
+    # %%
+    # Get the simulated fluorescence normalized to 1
+    fluo = s_val.get_full_results_df()["Fluo"]
+    fluo = fluo / fluo.max()
+
+    # %%
+    # Get the respective values from the simulated data
+    for i, (start, end) in SP_times.iterrows():
+        peak_time = fluo.loc[start:end].idxmax()
+
+        # Get the FM' value and values to the left and right
+        sim_points.iloc[i, 0] = fluo.loc[peak_time]
+
+        for j, offset in enumerate(point_timing):
+            point_time = peak_time + offset
+            nearest_time = bisect_left(fluo.index, point_time)
+            sim_points.iloc[i, j + 1] = fluo.loc[
+                fluo.index[[nearest_time, nearest_time + 1]]
+            ].mean()
+
+    # %%
+    # Calculate the residuals for all three points
+    for col in sim_points.columns:
+        residuals[f"PAMSPval_{col}"] = (
+            (
+                data_points_val[col].subtract(sim_points[col].to_numpy(), axis=0) ** 2
+            ).mean()
+            ** (0.5)
+        ).mean()
+
+    return pd.Series(residuals)
+
+
+# Function to be run by threads, allowing to change the residual function
+def thread_calculate_residuals(
+        parameter_update,
+        Schuurmans,
+        Benschop_CO2pps,
+        Benschop_CO2uMs,
+        Benschop2003_low,
+        experiment_select_435,
+        absorption_coef_PAM435,
+        data_points_435,
+        strain_params,
+        data_points_val,
+        point_timing,
+        fraction_simulated_points,
+        integrator_kwargs,
+        function
+        ):
+    return function(
+        parameter_update,
+        Schuurmans,
+        Benschop_CO2pps,
+        Benschop_CO2uMs,
+        Benschop2003_low,
+        experiment_select_435,
+        absorption_coef_PAM435,
+        data_points_435,
+        strain_params,
+        data_points_val,
+        point_timing,
+        fraction_simulated_points,
+        integrator_kwargs,
+    )
+
+
+# Overarching function to calculate the total residuals
 def calculate_residuals(
-        parameter_update={},
+        parameter_update,
         thread_index=-1,
-        intermediate_results_file="residuals_intermediate.csv",
-        logger_filename="residuals",
+        intermediate_results_file="../out/residuals_intermediate.csv",
+        logger_filename="../out/residuals",
         Schuurmans=Schuurmans,
         Benschop_CO2pps=Benschop_CO2pps,
         Benschop_CO2uMs=Benschop_CO2uMs,
@@ -741,452 +1283,99 @@ def calculate_residuals(
         integrator_kwargs=integrator_kwargs,
         residual_normalisation=residual_normalisation,
         residual_relative_weights=residual_relative_weights,
+        n_workers=1,
+        timeout=None,
+        save_intermediates=True
         ):
     # Set up logging
     ErrorLogger = setup_logger("ErrorLogger", Path(f"{logger_filename}_err.log"), level=logging.ERROR)
     InfoLogger = setup_logger("InfoLogger", Path(f"{logger_filename}_info.log"), level=logging.INFO)
 
+    # Measure the time needed for a singe run
+    start_time = datetime.now()
+
     # Try to get the residuals, return nan otherwise
     try:
-        # Container for different residuals
-        residuals = {}
+        # 1) Electron Pathways
+        # 2) Schuurmans
+        # 3) Benschop
+        # 4) PAM-SP experiment with 435nm grown cells
+        # 5) PAM-SP validation experiment
+
+        residual_functions = [
+            calculate_residuals_ePathways,
+            # calculate_residuals_Schuurmans,
+            # calculate_residuals_Benschop,
+            # calculate_residuals_PAMSP435,
+            # calculate_residuals_PAMSPval
+        ]
+
+        residuals = []
+
+        # Multiprocess the calculation if multiple workers are requested
+        if n_workers is None or n_workers>1:
+            with pebble.ProcessPool(max_workers=n_workers if n_workers is not None else cpu_count()) as pool:
+                for res in pool.map(
+                    partial(
+                        thread_calculate_residuals,
+                        parameter_update,
+                        Schuurmans,
+                        Benschop_CO2pps,
+                        Benschop_CO2uMs,
+                        Benschop2003_low,
+                        experiment_select_435,
+                        absorption_coef_PAM435,
+                        data_points_435,
+                        strain_params,
+                        data_points_val,
+                        point_timing,
+                        fraction_simulated_points,
+                        integrator_kwargs,
+                    ),
+                    residual_functions,
+                    timeout=timeout,
+                ).result():
+                    residuals.append(res)
+
+        # Otherwise evaluate one by one
+        elif n_workers==1:
+            residuals = list(map(
+                    partial(
+                        thread_calculate_residuals,
+                        parameter_update,
+                        Schuurmans,
+                        Benschop_CO2pps,
+                        Benschop_CO2uMs,
+                        Benschop2003_low,
+                        experiment_select_435,
+                        absorption_coef_PAM435,
+                        data_points_435,
+                        strain_params,
+                        data_points_val,
+                        point_timing,
+                        fraction_simulated_points,
+                        integrator_kwargs,
+                    ),
+                    residual_functions,
+                ))
+
+        # Combine all calculated residuals
+        residuals = pd.concat(residuals)
 
         # %% [markdown]
-        ###########################################################
-        # ## 1) Electron pathways at different light intensities
-        # Target: 15 electrons/PSI/s LET amounting to ~65%
-
-        # %%
-        # Measure the time needed for a singe run
-        start_time = datetime.now()
-
-        # %%
-
-        intens = np.linspace(100, 320, int(10 * fraction_simulated_points))
-        lights = [lip.light_gaussianLED(670, i) for i in intens]
-
-        # Simulate Wild Type and different mutants
-        # Standard model
-        m, y0 = get_model(check_consistency=False, verbose=False)
-
-        # Update the parameters to the current set
-        m.update_parameters(parameter_update)
-
-        pathways, sims = get_pathways_at_lights(m, y0, lights, intens)
-        # fnc.save_Simulator_dated(sims, f"resid_epaths_sims", results_path)
-        # fnc.save_obj_dated(pathways, "resid_epaths_paths", results_path)
-
-        # Get the mean LET fraction
-        let_frac = (pathways.T / pathways.sum(axis=1)).T["linear"]
-
-        # Residuals with target value 65%
-        residuals["LET_fraction"] = np.linalg.norm(let_frac - 0.65, ord=2)
-
-        # Get the Let flux per PSI
-        norm = m.get_parameter("PSItot") * 3  # Normalise to PS1 monomers
-        let_flux = pathways["linear"].iloc[-1] / norm
-
-        # Residuals with target value 65%
-        residuals["LET_flux"] = np.abs(let_flux - 15)
-
-        # %% [markdown]
-        ###########################################################
-        # ## 2) Schuurmans Oxygen and CO2 fluxes (Figure 6)
-
-        # %%
-        # Define the simulated lights
-        intens = Schuurmans.index.to_numpy()
-        lights = [lip.light_gaussianLED(625, i) for i in intens]
-
-        # Standard model
-        m, y0 = get_model(check_consistency=False, verbose=False)
-
-        # Update the parameters to the current set
-        m.update_parameters(parameter_update)
-
-        # Adjust the lights to in-culture conditions (2 mg(Chl) l^-1 according to Schuurmans)
-        MChl = 893.509  # [g mol^-1]
-        absorption_coef_Schuurmans = (
-            lip.get_pigment_absorption(m.parameters["pigment_content"]).sum(axis=1) * MChl
-        )
-        lights = lip.get_mean_sample_light(
-            lights,  # [µmol(Photons) m^-2 s^-1]
-            depth=0.01,  # [m]
-            absorption_coef=absorption_coef_Schuurmans,
-            chlorophyll_sample=(
-                2 / MChl * 1e3  # [mg(Chl) l^-1] (Schuurmans2014)  # [mol g^-1]
-            ),  # [mmol(Chl) m^-3]
-        )
-
-        # If a lower fraction of simulated points is given, select fewer points
-        if fraction_simulated_points < 1:
-            lights_select = slice(0, len(lights), int(fraction_simulated_points**-1))
-        else:
-            lights_select = slice(None)
-        # Calculate the pathways for the specified lights
-        pathways, sims = get_pathways_at_lights(
-            m, y0, lights[lights_select], intens[lights_select]
-        )
-
-        # Get the O2 and CO2 rates for Wild Type
-        gasrates = pd.concat([get_O2andCO2rates(s).iloc[-1, :] for s in sims], axis=1)
-        gasrates.columns = intens[lights_select].astype(int)
-        # fnc.save_obj_dated(gasrates, "resid_Schuurmans_gasrates", results_path)
-
-        # Calculate the Root mean squared error (RMSE)
-        res = gasrates.T.loc[:, ["O2_production", "O2_consumption"]] * prm.unit_conv(
-            ["mmol mol(Chl)-1 -> mmol g(Chl)-1", "s-1 -> min-1"]
-        )
-        res = res - Schuurmans.loc[res.index, :]
-        residuals["Schuurmans_O2"] = (res**2).mean().mean() ** 0.5
-
-        # %% [markdown]
-        ###########################################################
-        # ## 3) Benschop O2 data
-
-        # %%
-        # Adapt a model so that no compounds accumulate or drain
-        # Define a dictionary with all compounds that should be held constant
-        exch_dict = {
-            "3PGA": {"k": 10, "thresh": 1000},
-        }
-
-        # Define the MCA model by adding a flux keeping 3PGA constant
-        m_MCA, y0 = get_model(check_consistency=False, verbose=False)
-        m_MCA = fnc.add_exchange(m_MCA, exch_dict)
-
-        # Update the parameters to the current set
-        m_MCA.update_parameters(parameter_update)
-
-        # If a lower fraction of simulated points is given, select fewer points
-        if fraction_simulated_points < 1:
-            CO2_select = slice(0, len(Benschop_CO2pps), int(fraction_simulated_points**-1))
-        else:
-            CO2_select = slice(None)
-
-        O2s = pd.Series(np.nan, index=Benschop_CO2uMs[CO2_select])
-        for CO2pp, CO2uM in zip(Benschop_CO2pps[CO2_select], Benschop_CO2uMs[CO2_select]):
-            m_MCA.update_parameters(
-                {
-                    "CO2ext_pp": CO2pp,
-                }
-            )
-
-            _O2s = get_ssflux(
-                m_MCA,
-                y0,
-                lip.light_spectra,
-                "vO2out",
-                ("cool_white_led", 800),
-            )
-
-            O2s.loc[CO2uM] = _O2s
-
-        # fnc.save_obj_dated(O2s, "resid_Benschop_O2", results_path)
-
-        # Calculate the Root mean squared error (RMSE)
-        res = O2s * unit_conv(["mmol mol(Chl)-1 -> mmol g(Chl)-1", "s-1 -> h-1"])
-        res = res - Benschop2003_low.iloc[CO2_select, 0]
-        residuals["Benschop_O2"] = (res**2).mean() ** 0.5
-
-        # %% [markdown]
-        ###########################################################
-        # ## 4) Original 435 nm PAM-SP experiment
-
-        # %% [markdown]
-        # ### Get the PAM and strain data
-
-        # %% [markdown]
-        # ### Model the data
-
-        # %%
-        # Container for the simulated points
-        sim_points = pd.DataFrame(
-            np.nan, index=data_points_435["Fm'"].index, columns=["Fm'", "left", "right"]
-        )
-
-        # %% [markdown]
-        # ### Simulate the 435 nm experiment (with low blue phase after red)
-
-        # %%
-        # Select the measurement to simulate
-        growthlight = int(experiment_select_435[-3:])
-
-        strain_param = strain_params[str(growthlight)]["params"]
-        cuvette_Chlconc_PAM435 = strain_params[str(growthlight)]["cuvette_Chlconc"]
-        absorption_coef_PAM435 = strain_params[str(growthlight)]["absorption_coef"]
-
-        # Get the latest model version
-        m4, y0 = get_model(check_consistency=False, reduced_size=False, verbose=False)
-
-        # ADAPTION TO THE STRAIN
-        y0.update({"PSII": strain_param["PSIItot"]})
-        m4.update_parameters(strain_param)
-
-        # Change the CO2 concentration to 400ppm as experiments were conducted in air
-        m4.update_parameter("CO2ext_pp", 0.0004)
-
-        # Update the parameters to the current set
-        m4.update_parameters(parameter_update)
-
-        # Initialise the model
-        s_435 = Simulator(m4)
-        s_435.initialise(y0)
-
-        # Simulate the appropriate protocol
-        pulse_pfdm4 = 2600 * 2
-        lights_lowpulse = make_adjusted_lights(
-            absorption_coef=absorption_coef_PAM435,
-            chlorophyll_sample=cuvette_Chlconc_PAM435,
-            lights=make_lights(pulseInt=pulse_pfdm4, blue_wl=480),
-        )
-        if experiment_select_435.startswith("PSII kinetics, NPQ at state 2"):
-            protocol_435 = create_protocol_noNPQ(*lights_lowpulse)
-        else:
-            protocol_435 = create_protocol_NPQ(*lights_lowpulse)
-
-        s_435 = fnc.simulate_protocol(
-            s_435,
-            protocol_435,
-            retry_unsuccessful=True,
-            retry_kwargs=integrator_kwargs["retry"],
-            n_timepoints=10,
-            **integrator_kwargs["default"],
-        )
-
-        # %%
-        # Determine the Fm' timings (SP pulses have intensity > 2000)
-        SP_bool = (
-            protocol_435.loc[:, protocol_435.columns.str.startswith("_light")].apply(
-                simpson, axis=1
-            )
-            > 2000
-        ).to_numpy()
-
-        SP_times = pd.DataFrame(
-            {
-                "start": protocol_435.iloc[:-1].loc[SP_bool[1:], "t_end"].to_numpy(),
-                "end": protocol_435.loc[SP_bool, "t_end"].to_numpy(),
-            }
-        )
-
-        # %%
-        # Get the simulated fluorescence normalized to 1
-        fluo = s_435.get_full_results_df()["Fluo"]
-        fluo = fluo / fluo.max()
-
-        # %%
-        # Get the respective values from the simulated data
-        for i, (start, end) in SP_times.iterrows():
-            peak_time = fluo.loc[start:end].idxmax()
-
-            # Get the FM' value and values to the left and right
-            sim_points.iloc[i, 0] = fluo.loc[peak_time]
-
-            for j, offset in enumerate(point_timing):
-                point_time = peak_time + offset
-                nearest_time = bisect_left(fluo.index, point_time)
-                sim_points.iloc[i, j + 1] = fluo.loc[
-                    fluo.index[[nearest_time, nearest_time + 1]]
-                ].mean()
-
-        # %%
-        # Calculate the residuals for all three points
-        for col in sim_points.columns:
-            residuals[f"PAMSP435_{col}"] = (
-                (
-                    data_points_435[col].subtract(sim_points[col].to_numpy(), axis=0) ** 2
-                ).mean()
-                ** (0.5)
-            ).mean()
-
-        # %% [markdown]
-        ###########################################################
-        # ## 5) Validation PAM-SP experiment
-
-        # %%
-        # Container for the simulated points
-        sim_points = pd.DataFrame(
-            np.nan, index=data_points_val["Fm'"].index, columns=["Fm'", "left", "right"]
-        )
-
-        # %%
-        # Protocol of the validation experiment
-        dark, low_blue, high_blue, orange, pulse_orange, pulse_blue = make_lights(
-            blueInt=80,
-            orangeInt=50,
-            highblueInt=1800,
-            pulseInt=15000,
-            orange_wl=625,
-            blue_wl=440,
-        )
-        pulse_white = lip.light_spectra("cool_white_led", 15000)
-
-        # Dark acclimation
-        protocol_val = fnc.create_protocol_const(light=dark, time=300)
-
-        # Dark phase
-        protocol_val = fnc.create_protocol_PAM(
-            init=protocol_val,
-            actinic=(dark, 30 - 0.6),  # Actinic light intensity and duration
-            saturating=(
-                pulse_white,
-                0.6,
-            ),  # Saturating pulse light intensity and duration
-            cycles=4,
-            final_actinic_time=5,
-        )
-
-        # Blue phase
-        protocol_val = fnc.create_protocol_PAM(
-            init=protocol_val,
-            actinic=(low_blue, 30 - 0.6),  # Actinic light intensity and duration
-            saturating=(
-                pulse_white,
-                0.6,
-            ),  # Saturating pulse light intensity and duration
-            cycles=6,
-            first_actinic_time=25,
-            final_actinic_time=5,
-        )
-
-        # Orange phase
-        protocol_val = fnc.create_protocol_PAM(
-            init=protocol_val,
-            actinic=(orange, 30 - 0.6),  # Actinic light intensity and duration
-            saturating=(
-                pulse_white,
-                0.6,
-            ),  # Saturating pulse light intensity and duration
-            cycles=10,
-            first_actinic_time=25,
-            final_actinic_time=5,
-        )
-
-        # Blue phase
-        protocol_val = fnc.create_protocol_PAM(
-            init=protocol_val,
-            actinic=(low_blue, 30 - 0.6),  # Actinic light intensity and duration
-            saturating=(
-                pulse_white,
-                0.6,
-            ),  # Saturating pulse light intensity and duration
-            cycles=6,
-            first_actinic_time=25,
-            final_actinic_time=5,
-        )
-
-        # High blue phase
-        protocol_val = fnc.create_protocol_PAM(
-            init=protocol_val,
-            actinic=(high_blue, 30 - 0.6),  # Actinic light intensity and duration
-            saturating=(
-                pulse_white,
-                0.6,
-            ),  # Saturating pulse light intensity and duration
-            cycles=6,
-            first_actinic_time=25,
-            final_actinic_time=5,
-        )
-
-        # Blue phase
-        protocol_val = fnc.create_protocol_PAM(
-            init=protocol_val,
-            actinic=(low_blue, 30 - 0.6),  # Actinic light intensity and duration
-            saturating=(
-                pulse_white,
-                0.6,
-            ),  # Saturating pulse light intensity and duration
-            cycles=6,
-            first_actinic_time=25,
-            final_actinic_time=5,
-        )
-
-        # Simulate the validation experiment
-        m, y0 = get_model(verbose=False, check_consistency=False)
-
-        # Update the parameters to the current set
-        m.update_parameters(parameter_update)
-
-        s_val = Simulator(m)
-        s_val.initialise(y0)
-
-        # The culture is grown under 1% CO2
-        s_val.update_parameter("CO2ext_pp", 0.01)
-
-        s_val = fnc.simulate_protocol(
-            s_val,
-            protocol_val,
-            retry_unsuccessful=True,
-            retry_kwargs=integrator_kwargs["retry"],
-            n_timepoints=10,
-            **integrator_kwargs["default"],
-        )
-
-        # %%
-        # Determine the Fm' timings (SP pulses have intensity > 2000)
-        SP_bool = (
-            protocol_val.loc[:, protocol_val.columns.str.startswith("_light")].apply(
-                simpson, axis=1
-            )
-            > 2000
-        ).to_numpy()
-
-        SP_times = pd.DataFrame(
-            {
-                "start": protocol_val.iloc[:-1].loc[SP_bool[1:], "t_end"].to_numpy(),
-                "end": protocol_val.loc[SP_bool, "t_end"].to_numpy(),
-            }
-        )
-
-        # %%
-        # Get the simulated fluorescence normalized to 1
-        fluo = s_val.get_full_results_df()["Fluo"]
-        fluo = fluo / fluo.max()
-
-        # %%
-        # Get the respective values from the simulated data
-        for i, (start, end) in SP_times.iterrows():
-            peak_time = fluo.loc[start:end].idxmax()
-
-            # Get the FM' value and values to the left and right
-            sim_points.iloc[i, 0] = fluo.loc[peak_time]
-
-            for j, offset in enumerate(point_timing):
-                point_time = peak_time + offset
-                nearest_time = bisect_left(fluo.index, point_time)
-                sim_points.iloc[i, j + 1] = fluo.loc[
-                    fluo.index[[nearest_time, nearest_time + 1]]
-                ].mean()
-
-        # %%
-        # Calculate the residuals for all three points
-        for col in sim_points.columns:
-            residuals[f"PAMSPval_{col}"] = (
-                (
-                    data_points_val[col].subtract(sim_points[col].to_numpy(), axis=0) ** 2
-                ).mean()
-                ** (0.5)
-            ).mean()
-
-        # %% [markdown]
-        # ## Calculate the total residuals
-
-        # %%
+        # ## Calculate the final output as the mean of the weighted residuals
         residual_weights = pd.Series(residual_normalisation) * pd.Series(
             residual_relative_weights
         )
-
-        # %%
         residual = (pd.Series(residuals) / residual_weights).mean()
 
-        # %%
         end_time = datetime.now()
         InfoLogger.info(f"{thread_index} successfully finished in {end_time - start_time}")
 
         # Save the results to an intermediates file
-        with open(Path(intermediate_results_file), "a") as f:
-            f.writelines(f"{thread_index},{residual}\n")
+        if save_intermediates:
+            with open(Path(intermediate_results_file), "a") as f:
+                f.writelines(f"{thread_index},{residual}\n")
 
         return residual
     
@@ -1198,7 +1387,8 @@ def calculate_residuals(
         ErrorLogger.error(f"Error encountered in {thread_index}\n" + str(traceback.format_exc()))
 
         # Save the results to an intermediates file
-        with open(Path(intermediate_results_file), "a") as f:
-            f.writelines(f"{thread_index},{np.nan}\n")
+        if save_intermediates:
+            with open(Path(intermediate_results_file), "a") as f:
+                f.writelines(f"{thread_index},{np.inf}\n")
 
-        return np.nan
+        return np.inf

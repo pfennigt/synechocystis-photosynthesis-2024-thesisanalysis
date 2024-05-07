@@ -13,14 +13,14 @@ import warnings
 from scipy.optimize import minimize
 from concurrent import futures
 from pathlib import Path
+import logging
+import traceback
 
 sys.path.append("../Code")
 
 # Import model functions
 from get_current_model import get_model
-from function_residuals import calculate_residuals
-
-print(f"Started {datetime.now()}")
+from function_residuals import calculate_residuals, setup_logger
 
 
 # %%
@@ -72,15 +72,89 @@ def get_fitting_parameter_dict(values, names):
     return res.to_dict()
 
 # %%
+
+# fitting_parameter_bounds = {
+#     "fluo_influence": (1e-10,None),
+#     "lcf": (1e-10,None),
+#     "kUnquench": (1e-10,None),
+#     "KMUnquench": (1e-10,None),
+#     "kQuench": (1e-10,None),
+#     "kOCPactivation": (1e-10,None),
+#     "kOCPdeactivation": (1e-10,None),
+#     "OCPmax": (1e-10,None),
+# }
+
 fitting_parameter_bounds = {
-    "fluo_influence": (1e-10,None),
-    "lcf": (1e-10,None),
-    "kUnquench": (1e-10,None),
-    "KMUnquench": (1e-10,None),
-    "kQuench": (1e-10,None),
-    "kOCPactivation": (1e-10,None),
-    "kOCPdeactivation": (1e-10,None),
-    "OCPmax": (1e-10,None),
+    # "PSIItot": (1e-10, None),
+    # "PSItot": (1e-10, None),
+    # "Q_tot": (1e-10, None),
+    # "PC_tot": (1e-10, None),
+    # "Fd_tot": (1e-10, None),
+    # "NADP_tot": (1e-10, None),
+    # "NAD_tot": (1e-10, None),
+    # "AP_tot": (1e-10, None),
+    # "O2ext": (1e-10, None),
+    # "bHi": (1e-10, None),
+    # "bHo": (1e-10, None),
+    # "cf_lumen": (1e-10, None),
+    # "cf_cytoplasm": (1e-10, None),
+    "fCin": (1e-10, None),
+    # "kH0": (1e-10, None),
+    # "kHst": (1e-10, None),
+    # "kF": (1e-10, None),
+    # "k2": (1e-10, None),
+    # "kPQred": (1e-10, None),
+    # "kPCox": (1e-10, None),
+    # "kFdred": (1e-10, None),
+    "k_F1": (1e-10, None),
+    # "k_ox1": (1e-10, None),
+    "k_Q": (1e-10, None),
+    # "k_NDH": (1e-10, None),
+    # "k_SDH": (1e-10, None),
+    # "k_FN_fwd": (1e-10, None),
+    # "k_FN_rev": (1e-10, None),
+    "k_pass": (1e-10, None),
+    "k_aa": (1e-10, None),
+    # "kRespiration": (1e-10, None),
+    # "kO2out": (1e-10, None),
+    # "kCCM": (1e-10, None),
+    "fluo_influence": (1e-10, None),
+    # "PBS_free": (1e-10, None),
+    # "PBS_PS1": (1e-10, None),
+    # "PBS_PS2": (1e-10, None),
+    "lcf": (1e-10, None),
+    "KMPGA": (1e-10, None),
+    "kATPsynth": (1e-10, None),
+    # "Pi_mol": (1e-10, None),
+    # "HPR": (1e-10, None),
+    "kATPconsumption": (1e-10, None),
+    "kNADHconsumption": (1e-10, None),
+    # "vOxy_max": (1e-10, None),
+    # "KMATP": (1e-10, None),
+    # "KMNADPH": (1e-10, None),
+    # "KMCO2": (1e-10, None),
+    # "KIO2": (1e-10, None),
+    # "KMO2": (1e-10, None),
+    # "KICO2": (1e-10, None),
+    # "vCBB_max": (1e-10, None),
+    # "kPR": (1e-10, None),
+    "kUnquench": (1e-10, None),
+    "KMUnquench": (1e-10, None),
+    "kQuench": (1e-10, None),
+    "KHillFdred": (1e-10, None),
+    "nHillFdred": (1e-10, None),
+    # "k_O2": (1e-10, None),
+    # "cChl": (1e-10, None),
+    # "CO2ext_pp": (1e-10, None),
+    # "S": (1e-10, None),
+    "kCBBactivation": (1e-10, None),
+    "KMFdred": (1e-10, None),
+    "kOCPactivation": (1e-10, None),
+    "kOCPdeactivation": (1e-10, None),
+    "OCPmax": (1e-10, None),
+    "vNQ_max": (1e-10, None),
+    "KMNQ_Qox": (1e-10, None),
+    "KMNQ_Fdred": (1e-10, None),
 }
 
 start_values, bounds = get_fitting_start_and_bounds(fitting_parameter_bounds,m)
@@ -140,31 +214,44 @@ def fit_model_parameters(start_values, bounds=None, opt_kwargs={}, scale_to_valu
         fit.x = fit.x * scale_factors
     return fit
 
-print("Minimising...")
+if __name__ == "__main__":
+    print(f"Started {datetime.now()}")
+    print("Minimising...")
+
+    # Setup logging
+    InfoLogger = InfoLogger = setup_logger("InfoLogger", Path(f"../out/{file_prefix}_info.log"), level=logging.INFO)
+    ErrorLogger = setup_logger("ErrorLogger", Path(f"../out/{file_prefix}_err.log"), level=logging.ERROR)
+    
+    # Log the start of the minimising
+    InfoLogger.info("Started run")
+    # %%
+    # Locally optimise the model
+    # try:
+    with warnings.catch_warnings() as w:
+        # Cause all warnings to always be triggered.
+        # warnings.simplefilter("ignore", category=RuntimeWarning)
+        warnings.simplefilter("ignore")
+        fit = fit_model_parameters(
+            start_values, 
+            bounds=bounds, 
+            scale_to_value=0.01, 
+            opt_kwargs={"method":"Nelder-Mead"},
+            file_prefix=file_prefix
+            )
+        
+        # Save the results
+        with open(Path(f"../Results/{file_prefix}_results.pickle",), "wb") as f:
+            pickle.dump(fit, f)
+        
+        print(fit.message)
+        InfoLogger.info(f"Finished run: {fit.message}")
+    # except Exception as e:
+    #     ErrorLogger.error("Error encountered\n" + str(traceback.format_exc()))
+    #     InfoLogger.info(f"Finished run with Error")
 
 
-# %%
-# Locally optimise the model
-with warnings.catch_warnings() as w:
-    # Cause all warnings to always be triggered.
-    # warnings.simplefilter("ignore", category=RuntimeWarning)
-    warnings.simplefilter("ignore")
-    fit = fit_model_parameters(
-        start_values, 
-        bounds=bounds, 
-        scale_to_value=0.01, 
-        opt_kwargs={"method":"Nelder-Mead"},
-        file_prefix=file_prefix
-        )
+    # with open(Path(f"../Results/{file_prefix}_results.pickle",), "rb") as f:
+    #     test = pickle.load(f)
 
-# %%
-with open(Path(f"../Results/{file_prefix}_results.pickle",), "wb") as f:
-    pickle.dump(fit, f)
-
-# with open(Path(f"../Results/{file_prefix}_results.pickle",), "rb") as f:
-#     test = pickle.load(f)
-
-# %%
-print(fit.message)
-
-print(f"Finished {datetime.now()}")
+    # %%
+    print(f"Finished {datetime.now()}")

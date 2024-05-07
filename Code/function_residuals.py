@@ -65,7 +65,7 @@ results_path = Path("../Results")
 plot_format = ["svg", "png"]
 
 # Reduce or increase the number of simulated points in appropriate analyses (1=default amount)
-fraction_simulated_points = 0.3
+fraction_simulated_points = 1
 
 # %%
 integrator_kwargs = {

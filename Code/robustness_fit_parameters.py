@@ -226,28 +226,28 @@ if __name__ == "__main__":
     InfoLogger.info("Started run")
     # %%
     # Locally optimise the model
-    # try:
-    with warnings.catch_warnings() as w:
-        # Cause all warnings to always be triggered.
-        # warnings.simplefilter("ignore", category=RuntimeWarning)
-        warnings.simplefilter("ignore")
-        fit = fit_model_parameters(
-            start_values, 
-            bounds=bounds, 
-            scale_to_value=0.01, 
-            opt_kwargs={"method":"Nelder-Mead"},
-            file_prefix=file_prefix
-            )
-        
-        # Save the results
-        with open(Path(f"../Results/{file_prefix}_results.pickle",), "wb") as f:
-            pickle.dump(fit, f)
-        
-        print(fit.message)
-        InfoLogger.info(f"Finished run: {fit.message}")
-    # except Exception as e:
-    #     ErrorLogger.error("Error encountered\n" + str(traceback.format_exc()))
-    #     InfoLogger.info(f"Finished run with Error")
+    try:
+        with warnings.catch_warnings() as w:
+            # Cause all warnings to always be triggered.
+            # warnings.simplefilter("ignore", category=RuntimeWarning)
+            warnings.simplefilter("ignore")
+            fit = fit_model_parameters(
+                start_values, 
+                bounds=bounds, 
+                scale_to_value=0.01, 
+                opt_kwargs={"method":"Nelder-Mead"},
+                file_prefix=file_prefix
+                )
+            
+            # Save the results
+            with open(Path(f"../Results/{file_prefix}_results.pickle",), "wb") as f:
+                pickle.dump(fit, f)
+            
+            print(fit.message)
+            InfoLogger.info(f"Finished run: {fit.message}")
+    except Exception as e:
+        ErrorLogger.error("Error encountered\n" + str(traceback.format_exc()))
+        InfoLogger.info(f"Finished run with Error")
 
 
     # with open(Path(f"../Results/{file_prefix}_results.pickle",), "rb") as f:

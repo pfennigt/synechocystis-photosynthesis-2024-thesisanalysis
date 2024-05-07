@@ -71,15 +71,15 @@ fraction_simulated_points = 1
 integrator_kwargs = {
     "default": {
         "maxsteps": 10000,
-        "atol": 1e-6,
-        "rtol": 1e-6,
+        "atol": 1e-7,
+        "rtol": 1e-7,
         "maxnef": 4,  # max error failures
         "maxncf": 1,  # max convergence failures
     },
     "retry": {
         "maxsteps": 20000,
-        "atol": 1e-6,
-        "rtol": 1e-6,
+        "atol": 1e-7,
+        "rtol": 1e-7,
         "maxnef": 10,
         "maxncf": 10,
     },

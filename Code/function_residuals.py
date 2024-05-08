@@ -71,12 +71,19 @@ fraction_simulated_points = 1
 integrator_kwargs = {
     "default": {
         "maxsteps": 10000,
-        "atol": 1e-7,
-        "rtol": 1e-7,
+        "atol": 1e-6,
+        "rtol": 1e-6,
         "maxnef": 4,  # max error failures
         "maxncf": 1,  # max convergence failures
     },
-    "retry": {
+    "retry1": {
+        "maxsteps": 20000,
+        "atol": 1e-6,
+        "rtol": 1e-6,
+        "maxnef": 10,
+        "maxncf": 10,
+    },
+    "retry2": {
         "maxsteps": 20000,
         "atol": 1e-7,
         "rtol": 1e-7,
@@ -1303,11 +1310,11 @@ def calculate_residuals(
         # 5) PAM-SP validation experiment
 
         residual_functions = [
-            calculate_residuals_ePathways,
+            # calculate_residuals_ePathways,
             calculate_residuals_Schuurmans,
-            calculate_residuals_Benschop,
-            calculate_residuals_PAMSP435,
-            calculate_residuals_PAMSPval
+            # calculate_residuals_Benschop,
+            # calculate_residuals_PAMSP435,
+            # calculate_residuals_PAMSPval
         ]
 
         residuals = []

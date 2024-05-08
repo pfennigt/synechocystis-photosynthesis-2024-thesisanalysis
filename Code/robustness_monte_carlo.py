@@ -28,7 +28,7 @@ include_default_model = True
 
 # Set the maximum number of parallel threads and the timeout
 n_workers = 100 # Maximum number of parallel threads
-timeout = 500 # Timeout for each thread in seconds
+timeout = 600 # Timeout for each thread in seconds
 
 # Set the prefix to be used for logging and results files
 file_prefix = f"montecarlo_{datetime.now().strftime('%Y%m%d%H%M')}"
@@ -193,34 +193,36 @@ if __name__ == "__main__":
             # Execute the thread_function for each parameter input
             with tqdm(total=n_mutations+include_default_model) as pbar:
                 with pebble.ProcessPool(max_workers=n_workers) as pool:
-                    try:
-                        for index, res in pool.map(
-                            partial(
-                                thread_function,
-                                intermediate_results_file=f"../out/{file_prefix}_intermediate.csv",
-                                logger_filename=f"../out/{file_prefix}",
-                            ),
-                            params.iterrows(),
-                            timeout=timeout,
-                        ).result():
+                    future = pool.map(
+                        partial(
+                            thread_function,
+                            intermediate_results_file=f"../out/{file_prefix}_intermediate.csv",
+                            logger_filename=f"../out/{file_prefix}",
+                        ),
+                        params.iterrows(),
+                        timeout=timeout,
+                    )
+                    it = future.result()
+                    
+                    while True:
+                        try:
+                            index, res = next(it)
                             pbar.update(1)
                             results[index] = res
-
-                    except futures.TimeoutError:
-                        pbar.update(1)
-                    except Exception as e:
-                        pbar.update(1)
-                        print(e)
-                    finally:
-                        pbar.update(1)
+                        except futures.TimeoutError:
+                            pbar.update(1)
+                        except StopIteration:
+                            break
+                        except Exception as e:
+                            pbar.update(1)
+                            print(e)
+                        finally:
+                            pbar.update(1)
 
             # Save the results
             results.to_csv(f"../Results/{file_prefix}_results.csv")
-        
             InfoLogger.info(f"Finished run successfully")
         
         except Exception as e:
             ErrorLogger.error("Error encountered\n" + str(traceback.format_exc()))
             InfoLogger.info(f"Finished run with Error")
-
-

@@ -10,6 +10,7 @@ import sys
 import re
 import warnings
 import pebble
+import futures
 
 import traceback
 import logging
@@ -71,15 +72,15 @@ fraction_simulated_points = 1
 integrator_kwargs = {
     "default": {
         "maxsteps": 10000,
-        "atol": 1e-6,
-        "rtol": 1e-6,
+        "atol": 1e-7,
+        "rtol": 1e-7,
         "maxnef": 4,  # max error failures
         "maxncf": 1,  # max convergence failures
     },
     "retry1": {
         "maxsteps": 20000,
-        "atol": 1e-6,
-        "rtol": 1e-6,
+        "atol": 1e-7,
+        "rtol": 1e-7,
         "maxnef": 10,
         "maxncf": 10,
     },
@@ -163,7 +164,7 @@ def get_pathways_at_lights(model, y0, lights, intens):
             },
             rel_norm=True,
             return_simulator=True,
-            **integrator_kwargs["retry"],
+            **integrator_kwargs["retry1"],
         )
 
         if t is None:
@@ -223,7 +224,7 @@ def get_ssflux(m, y0, lightfun, target, light_params, tolerance=1e-4, rel_norm=F
         },
         rel_norm=True,
         return_simulator=True,
-        **integrator_kwargs["retry"],
+        **integrator_kwargs["retry1"],
     )
     if t is None:
         return np.nan
@@ -994,7 +995,7 @@ def calculate_residuals_PAMSP435(
         s_435,
         protocol_435,
         retry_unsuccessful=True,
-        retry_kwargs=integrator_kwargs["retry"],
+        retry_kwargs=integrator_kwargs["retry1"],
         n_timepoints=10,
         **integrator_kwargs["default"],
     )
@@ -1182,7 +1183,7 @@ def calculate_residuals_PAMSPval(
         s_val,
         protocol_val,
         retry_unsuccessful=True,
-        retry_kwargs=integrator_kwargs["retry"],
+        retry_kwargs=integrator_kwargs["retry1"],
         n_timepoints=10,
         **integrator_kwargs["default"],
     )
@@ -1322,7 +1323,7 @@ def calculate_residuals(
         # Multiprocess the calculation if multiple workers are requested
         if n_workers is None or n_workers>1:
             with pebble.ProcessPool(max_workers=n_workers if n_workers is not None else cpu_count()) as pool:
-                for res in pool.map(
+                future = pool.map(
                     partial(
                         thread_calculate_residuals,
                         parameter_update,
@@ -1341,8 +1342,18 @@ def calculate_residuals(
                     ),
                     residual_functions,
                     timeout=timeout,
-                ).result():
-                    residuals.append(res)
+                )
+                it = future.result()
+
+                while True:
+                    try:
+                        res = next(it)
+                        residuals.append(res)
+                    except futures.TimeoutError:
+                        residuals = None
+                    except StopIteration:
+                        break
+
 
         # Otherwise evaluate one by one
         elif n_workers==1:
@@ -1366,18 +1377,24 @@ def calculate_residuals(
                     residual_functions,
                 ))
 
-        # Combine all calculated residuals
-        residuals = pd.concat(residuals)
+        if residuals is not None:
+            # Combine all calculated residuals
+            residuals = pd.concat(residuals)
 
-        # %% [markdown]
-        # ## Calculate the final output as the mean of the weighted residuals
-        residual_weights = pd.Series(residual_normalisation) * pd.Series(
-            residual_relative_weights
-        )
-        residual = (pd.Series(residuals) / residual_weights).mean()
+            # %% [markdown]
+            # ## Calculate the final output as the mean of the weighted residuals
+            residual_weights = pd.Series(residual_normalisation) * pd.Series(
+                residual_relative_weights
+            )
+            residual = (pd.Series(residuals) / residual_weights).mean()
 
-        end_time = datetime.now()
-        InfoLogger.info(f"{thread_index} successfully finished in {end_time - start_time}")
+            end_time = datetime.now()
+            InfoLogger.info(f"{thread_index} successfully finished in {end_time - start_time}")
+        
+        else:
+            residual = np.inf
+            end_time = datetime.now()
+            InfoLogger.info(f"{thread_index} timed out after {end_time - start_time}")
 
         # Save the results to an intermediates file
         if save_intermediates:
@@ -1385,6 +1402,7 @@ def calculate_residuals(
                 f.writelines(f"{thread_index},{residual}\n")
 
         return residual
+
     
     # If an error was encountered warn and return NaN
     except Exception as e:

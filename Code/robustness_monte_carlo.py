@@ -225,4 +225,4 @@ if __name__ == "__main__":
         
         except Exception as e:
             ErrorLogger.error("Error encountered\n" + str(traceback.format_exc()))
-            InfoLogger.info(f"Finished run with Error")
+            InfoLogger.info("Finished run with Error")

@@ -1311,11 +1311,11 @@ def calculate_residuals(
         # 5) PAM-SP validation experiment
 
         residual_functions = [
-            # calculate_residuals_ePathways,
+            calculate_residuals_ePathways,
             calculate_residuals_Schuurmans,
-            # calculate_residuals_Benschop,
-            # calculate_residuals_PAMSP435,
-            # calculate_residuals_PAMSPval
+            calculate_residuals_Benschop,
+            calculate_residuals_PAMSP435,
+            calculate_residuals_PAMSPval
         ]
 
         residuals = []

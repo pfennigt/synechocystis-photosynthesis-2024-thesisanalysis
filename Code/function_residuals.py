@@ -10,7 +10,7 @@ import sys
 import re
 import warnings
 import pebble
-import futures
+from concurrent import futures
 
 import traceback
 import logging

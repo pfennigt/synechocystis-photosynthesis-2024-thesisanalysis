@@ -215,7 +215,7 @@ if __name__ == "__main__":
                             break
                         except Exception as e:
                             pbar.update(1)
-                            print(e)
+                            ErrorLogger.error("Error encountered in residuals\n" + str(traceback.format_exc()))
                         finally:
                             pbar.update(1)
 
@@ -224,5 +224,5 @@ if __name__ == "__main__":
             InfoLogger.info(f"Finished run successfully")
         
         except Exception as e:
-            ErrorLogger.error("Error encountered\n" + str(traceback.format_exc()))
+            ErrorLogger.error("Error encountered in Monte Carlo function\n" + str(traceback.format_exc()))
             InfoLogger.info("Finished run with Error")

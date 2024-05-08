@@ -178,7 +178,7 @@ if __name__ == "__main__":
 
     # Setup logging
     InfoLogger = InfoLogger = setup_logger("InfoLogger", Path(f"../out/{file_prefix}_info.log"), level=logging.INFO)
-    ErrorLogger = setup_logger("ErrorLogger", Path(f"../out/{file_prefix}_err.log"), level=logging.ERROR)
+    ErrorLogger = setup_logger("ErrorLogger", Path(f"../Results/{file_prefix}_err.log"), level=logging.ERROR)
 
     # Log the start of the run
     InfoLogger.info("Started run")
@@ -215,7 +215,7 @@ if __name__ == "__main__":
                         pbar.update(1)
 
             # Save the results
-            results.to_csv(f"../out/{file_prefix}_results.csv")
+            results.to_csv(f"../Results/{file_prefix}_results.csv")
         
             InfoLogger.info(f"Finished run successfully")
         

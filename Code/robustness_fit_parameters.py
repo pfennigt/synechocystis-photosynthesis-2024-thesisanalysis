@@ -243,7 +243,6 @@ if __name__ == "__main__":
             with open(Path(f"../Results/{file_prefix}_results.pickle",), "wb") as f:
                 pickle.dump(fit, f)
             
-            print(fit.message)
             InfoLogger.info(f"Finished run: {fit.message}")
     except Exception as e:
         ErrorLogger.error("Error encountered\n" + str(traceback.format_exc()))

@@ -215,9 +215,6 @@ def fit_model_parameters(start_values, bounds=None, opt_kwargs={}, scale_to_valu
     return fit
 
 if __name__ == "__main__":
-    print(f"Started {datetime.now()}")
-    print("Minimising...")
-
     # Setup logging
     InfoLogger = InfoLogger = setup_logger("InfoLogger", Path(f"../out/{file_prefix}_info.log"), level=logging.INFO)
     ErrorLogger = setup_logger("ErrorLogger", Path(f"../out/{file_prefix}_err.log"), level=logging.ERROR)
@@ -251,6 +248,3 @@ if __name__ == "__main__":
 
     # with open(Path(f"../Results/{file_prefix}_results.pickle",), "rb") as f:
     #     test = pickle.load(f)
-
-    # %%
-    print(f"Finished {datetime.now()}")

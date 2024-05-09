@@ -162,7 +162,7 @@ def get_pathways_at_lights(model, y0, lights, intens, integrator_kwargs=integrat
             simulation_kwargs={
                 "t_end": 1e6,
                 "tolerances": [[["CBBa", "PSII", "OCP"], 1e-7], [None, 1e-6]],
-                "verbose": True,
+                "verbose": False,
             },
             rel_norm=True,
             return_simulator=True,
@@ -224,7 +224,7 @@ def get_ssflux(m, y0, lightfun, target, light_params, tolerance=1e-4, integrator
         simulation_kwargs={
             "t_end": 1e6,
             "tolerances": [[["CBBa", "PSII", "OCP"], 1e-7], [None, 1e-6]],
-            "verbose": True,
+            "verbose": False,
         },
         rel_norm=True,
         return_simulator=True,

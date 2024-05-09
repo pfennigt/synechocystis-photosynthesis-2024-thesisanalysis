@@ -148,7 +148,7 @@ def thread_function(x, **kwargs):
 
         # Handle the result if needed
     except Exception as e:
-        print(f"An error occurred in thread {index} with parameter {p}: {e}")
+        warnings.warn(f"An error occurred in thread {index} with parameter {p}: {e}")
 
 # %%
 # Create the parameters
@@ -173,9 +173,6 @@ if include_default_model:
 results = pd.Series(index=np.arange(n_mutations+include_default_model), dtype=float)
 
 if __name__ == "__main__":
-    print(f"Started {datetime.now()}")
-    print("Monte Carlo simulation...")
-
     # Setup logging
     InfoLogger = InfoLogger = setup_logger("InfoLogger", Path(f"../out/{file_prefix}_info.log"), level=logging.INFO)
     ErrorLogger = setup_logger("ErrorLogger", Path(f"../out/{file_prefix}_err.log"), level=logging.ERROR)

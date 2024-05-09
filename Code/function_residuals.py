@@ -72,15 +72,15 @@ fraction_simulated_points = 1
 integrator_kwargs = {
     "default": {
         "maxsteps": 10000,
-        "atol": 1e-7,
-        "rtol": 1e-7,
+        "atol": 1e-6,
+        "rtol": 1e-6,
         "maxnef": 4,  # max error failures
         "maxncf": 1,  # max convergence failures
     },
     "retry1": {
         "maxsteps": 20000,
-        "atol": 1e-7,
-        "rtol": 1e-7,
+        "atol": 1e-6,
+        "rtol": 1e-6,
         "maxnef": 10,
         "maxncf": 10,
     },
@@ -92,6 +92,8 @@ integrator_kwargs = {
         "maxncf": 10,
     },
 }
+
+retry_kwargs = [v for k,v in integrator_kwargs.items() if k.startswith("retry")]
 
 # %%
 # Define relative weights and normalisation factor for the residuals
@@ -138,7 +140,7 @@ def setup_logger(name, log_file, level=logging.INFO):
     return logger
 
 # %%
-def get_pathways_at_lights(model, y0, lights, intens):
+def get_pathways_at_lights(model, y0, lights, intens, integrator_kwargs=integrator_kwargs["default"], retry_kwargs=None, retry_unsuccessful=False):
     sims = []
     for i, light in zip(intens, lights):
         m = model.copy()
@@ -155,16 +157,18 @@ def get_pathways_at_lights(model, y0, lights, intens):
         s.initialise(y0)
         # t,y = s.simulate(10000)
         # t,y = s.simulate_to_steady_state(tolerance=1e-2)
-        s, t, y = simulate_to_steady_state_custom(
+        s,t,y = simulate_to_steady_state_custom(
             s,
             simulation_kwargs={
                 "t_end": 1e6,
                 "tolerances": [[["CBBa", "PSII", "OCP"], 1e-7], [None, 1e-6]],
-                "verbose": False,
+                "verbose": True,
             },
             rel_norm=True,
             return_simulator=True,
-            **integrator_kwargs["retry1"],
+            retry_kwargs=retry_kwargs,
+            retry_unsuccessful=retry_unsuccessful,
+            **integrator_kwargs
         )
 
         if t is None:
@@ -209,22 +213,24 @@ def get_O2andCO2rates(s):
 
 
 # %%
-def get_ssflux(m, y0, lightfun, target, light_params, tolerance=1e-4, rel_norm=False):
+def get_ssflux(m, y0, lightfun, target, light_params, tolerance=1e-4, integrator_kwargs=integrator_kwargs["default"], rel_norm=False, retry_kwargs=None, retry_unsuccessful=False):
     light = lightfun(*light_params)
     s = Simulator(m.copy())
     s.update_parameter("pfd", light)
     s.initialise(y0)
     # t,y = s.simulate_to_steady_state(tolerance=tolerance, rel_norm=rel_norm, **fnc.simulator_kwargs["loose"])
-    s, t, y = simulate_to_steady_state_custom(
+    s,t,y = simulate_to_steady_state_custom(
         s,
         simulation_kwargs={
             "t_end": 1e6,
             "tolerances": [[["CBBa", "PSII", "OCP"], 1e-7], [None, 1e-6]],
-            "verbose": False,
+            "verbose": True,
         },
         rel_norm=True,
         return_simulator=True,
-        **integrator_kwargs["retry1"],
+        retry_kwargs=retry_kwargs,
+        retry_unsuccessful=retry_unsuccessful,
+        **integrator_kwargs
     )
     if t is None:
         return np.nan
@@ -761,7 +767,15 @@ def calculate_residuals_ePathways(
     # Update the parameters to the current set
     m.update_parameters(parameter_update)
 
-    pathways, sims = get_pathways_at_lights(m, y0, lights, intens)
+    pathways, sims = get_pathways_at_lights(
+        m, 
+        y0, 
+        lights, 
+        intens,
+        integrator_kwargs=integrator_kwargs["default"],
+        retry_kwargs=retry_kwargs,
+        retry_unsuccessful=True
+        )
     # fnc.save_Simulator_dated(sims, f"resid_epaths_sims", results_path)
     # fnc.save_obj_dated(pathways, "resid_epaths_paths", results_path)
 
@@ -833,7 +847,13 @@ def calculate_residuals_Schuurmans(
         lights_select = slice(None)
     # Calculate the pathways for the specified lights
     pathways, sims = get_pathways_at_lights(
-        m, y0, lights[lights_select], intens[lights_select]
+        m, 
+        y0, 
+        lights[lights_select], 
+        intens[lights_select],
+        integrator_kwargs=integrator_kwargs["default"],
+        retry_kwargs=retry_kwargs,
+        retry_unsuccessful=True
     )
 
     # Get the O2 and CO2 rates for Wild Type
@@ -905,6 +925,9 @@ def calculate_residuals_Benschop(
             lip.light_spectra,
             "vO2out",
             ("cool_white_led", 800),
+            integrator_kwargs=integrator_kwargs["default"],
+            retry_kwargs=retry_kwargs,
+            retry_unsuccessful=True
         )
 
         O2s.loc[CO2uM] = _O2s
@@ -995,7 +1018,7 @@ def calculate_residuals_PAMSP435(
         s_435,
         protocol_435,
         retry_unsuccessful=True,
-        retry_kwargs=integrator_kwargs["retry1"],
+        retry_kwargs=retry_kwargs,
         n_timepoints=10,
         **integrator_kwargs["default"],
     )
@@ -1183,7 +1206,7 @@ def calculate_residuals_PAMSPval(
         s_val,
         protocol_val,
         retry_unsuccessful=True,
-        retry_kwargs=integrator_kwargs["retry1"],
+        retry_kwargs=retry_kwargs,
         n_timepoints=10,
         **integrator_kwargs["default"],
     )

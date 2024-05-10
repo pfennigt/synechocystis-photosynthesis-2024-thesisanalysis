@@ -91,6 +91,13 @@ integrator_kwargs = {
         "maxnef": 10,
         "maxncf": 10,
     },
+    "retry3": {
+        "maxsteps": 20000,
+        "atol": 1e-9,
+        "rtol": 1e-9,
+        "maxnef": 10,
+        "maxncf": 10,
+    },
 }
 
 retry_kwargs = [v for k,v in integrator_kwargs.items() if k.startswith("retry")]

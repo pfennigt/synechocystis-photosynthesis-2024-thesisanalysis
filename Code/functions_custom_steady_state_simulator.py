@@ -47,7 +47,8 @@ def simulate_to_steady_state_custom(
             retry_unsuccessful=retry_unsuccessful,
             return_unsuccessful=return_unsuccessful,
             verbose=verbose,
-            t_end=t_end
+            t_end=t_end,
+            steps=100 # Testwise, have always the last 1% of the time range evaluated
         )
         if t is None:
             if verbose:

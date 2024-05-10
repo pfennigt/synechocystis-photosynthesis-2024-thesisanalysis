@@ -23,11 +23,11 @@ from get_current_model import get_model
 
 # %%
 # Set the number of evaluated samples
-n_mutations = 7
+n_mutations = 10000
 include_default_model = True
 
 # Set the maximum number of parallel threads and the timeout
-n_workers = 4 # Maximum number of parallel threads
+n_workers = 100 # Maximum number of parallel threads
 timeout = 600 # Timeout for each thread in seconds
 
 # Set the prefix to be used for logging and results files

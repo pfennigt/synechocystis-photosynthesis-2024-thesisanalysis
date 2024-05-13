@@ -42,6 +42,9 @@ from calculate_parameters_restruct import unit_conv
 # Import model functions
 from get_current_model import get_model
 
+from contextlib import contextmanager
+import os
+
 idx = pd.IndexSlice
 
 # %%
@@ -129,6 +132,8 @@ residual_normalisation = {
     "PAMSPval_left": 0.0964,
     "PAMSPval_right": 0.0985,
 }
+
+n_objectives = len(residual_relative_weights)
 
 # %% [markdown]
 # ## Function definitions
@@ -1267,6 +1272,17 @@ def calculate_residuals_PAMSPval(
     return pd.Series(residuals)
 
 
+# Function to suppress CVode warnings
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:  
+            yield
+        finally:
+            sys.stdout = old_stdout
+
 # Function to be run by threads, allowing to change the residual function
 def thread_calculate_residuals(
         parameter_update,
@@ -1323,7 +1339,8 @@ def calculate_residuals(
         residual_relative_weights=residual_relative_weights,
         n_workers=1,
         timeout=None,
-        save_intermediates=True
+        save_intermediates=True,
+        return_all=False,
         ):
     # Set up logging
     ErrorLogger = setup_logger("ErrorLogger", Path(f"{logger_filename}_err.log"), level=logging.ERROR)
@@ -1350,63 +1367,63 @@ def calculate_residuals(
 
         residuals = []
 
-        # Multiprocess the calculation if multiple workers are requested
-        if n_workers is None or n_workers>1:
-            with pebble.ProcessPool(max_workers=n_workers if n_workers is not None else cpu_count()) as pool:
-                future = pool.map(
-                    partial(
-                        thread_calculate_residuals,
-                        parameter_update,
-                        Schuurmans,
-                        Benschop_CO2pps,
-                        Benschop_CO2uMs,
-                        Benschop2003_low,
-                        experiment_select_435,
-                        absorption_coef_PAM435,
-                        data_points_435,
-                        strain_params,
-                        data_points_val,
-                        point_timing,
-                        fraction_simulated_points,
-                        integrator_kwargs,
-                    ),
-                    residual_functions,
-                    timeout=timeout,
-                )
-                it = future.result()
+        with suppress_stdout():
+            # Multiprocess the calculation if multiple workers are requested
+            if n_workers is None or n_workers>1:
+                with pebble.ProcessPool(max_workers=n_workers if n_workers is not None else cpu_count()) as pool:
+                    future = pool.map(
+                        partial(
+                            thread_calculate_residuals,
+                            parameter_update,
+                            Schuurmans,
+                            Benschop_CO2pps,
+                            Benschop_CO2uMs,
+                            Benschop2003_low,
+                            experiment_select_435,
+                            absorption_coef_PAM435,
+                            data_points_435,
+                            strain_params,
+                            data_points_val,
+                            point_timing,
+                            fraction_simulated_points,
+                            integrator_kwargs,
+                        ),
+                        residual_functions,
+                        timeout=timeout,
+                    )
+                    it = future.result()
 
-                while True:
-                    try:
-                        res = next(it)
-                        residuals.append(res)
-                    except futures.TimeoutError:
-                        residuals = None
-                    except StopIteration:
-                        break
+                    while True:
+                        try:
+                            res = next(it)
+                            residuals.append(res)
+                        except futures.TimeoutError:
+                            residuals = None
+                        except StopIteration:
+                            break
 
 
-        # Otherwise evaluate one by one
-        elif n_workers==1:
-            residuals = list(map(
-                    partial(
-                        thread_calculate_residuals,
-                        parameter_update,
-                        Schuurmans,
-                        Benschop_CO2pps,
-                        Benschop_CO2uMs,
-                        Benschop2003_low,
-                        experiment_select_435,
-                        absorption_coef_PAM435,
-                        data_points_435,
-                        strain_params,
-                        data_points_val,
-                        point_timing,
-                        fraction_simulated_points,
-                        integrator_kwargs,
-                    ),
-                    residual_functions,
-                ))
-
+            # Otherwise evaluate one by one
+            elif n_workers==1:
+                residuals = list(map(
+                        partial(
+                            thread_calculate_residuals,
+                            parameter_update,
+                            Schuurmans,
+                            Benschop_CO2pps,
+                            Benschop_CO2uMs,
+                            Benschop2003_low,
+                            experiment_select_435,
+                            absorption_coef_PAM435,
+                            data_points_435,
+                            strain_params,
+                            data_points_val,
+                            point_timing,
+                            fraction_simulated_points,
+                            integrator_kwargs,
+                        ),
+                        residual_functions,
+                    ))
         if residuals is not None:
             # Combine all calculated residuals
             residuals = pd.concat(residuals)
@@ -1416,24 +1433,19 @@ def calculate_residuals(
             residual_weights = pd.Series(residual_normalisation) * pd.Series(
                 residual_relative_weights
             )
-            residual = (pd.Series(residuals) / residual_weights).mean()
+            residuals = pd.Series(residuals) / residual_weights
+            residual = residuals.mean()
 
             end_time = datetime.now()
             InfoLogger.info(f"{thread_index} successfully finished in {end_time - start_time}")
         
         else:
+            # Set the residuals as inf if a simulation failed
             residual = np.inf
+            residuals = np.full(n_objectives, np.inf)
             end_time = datetime.now()
             InfoLogger.info(f"{thread_index} timed out after {end_time - start_time}")
 
-        # Save the results to an intermediates file
-        if save_intermediates:
-            with open(Path(intermediate_results_file), "a") as f:
-                f.writelines(f"{thread_index},{residual}\n")
-
-        return residual
-
-    
     # If an error was encountered warn and return NaN
     except Exception as e:
         # Warn and log the error
@@ -1441,9 +1453,21 @@ def calculate_residuals(
         InfoLogger.info(f"{thread_index} encountered an error")
         ErrorLogger.error(f"Error encountered in {thread_index}\n" + str(traceback.format_exc()))
 
-        # Save the results to an intermediates file
-        if save_intermediates:
-            with open(Path(intermediate_results_file), "a") as f:
-                f.writelines(f"{thread_index},{np.inf}\n")
+        residual = np.inf
+        residuals = np.full(n_objectives, np.inf)
 
-        return np.inf
+
+    # Save the results to an intermediates file
+    if save_intermediates:
+        # Create the file if it doesn't exist yet
+        if not Path(intermediate_results_file).is_file():
+            with open(Path(intermediate_results_file), "a") as f:
+                f.writelines(f"index,total_residuals,{','.join(list(residuals.index.astype(str)))}\n")
+
+        with open(Path(intermediate_results_file), "a") as f:
+            f.writelines(f"{thread_index},{residual},{','.join(residuals.values.astype(str))}\n")
+
+    if return_all:
+        return residual, residuals
+    else:
+        return residual

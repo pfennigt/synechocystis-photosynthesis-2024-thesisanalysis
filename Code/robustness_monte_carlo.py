@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.append("../Code")
 
 # Import model functions
-from function_residuals import calculate_residuals, setup_logger
+from function_residuals import calculate_residuals, setup_logger, residual_relative_weights
 from get_current_model import get_model
 
 # %%
@@ -39,76 +39,76 @@ rng = np.random.default_rng(2024)
 
 # %%
 parameter_ranges = {
-    # "PSIItot": (0.1,10),
-    # "PSItot": (0.1,10),
-    # "Q_tot": (0.1,10),
-    # "PC_tot": (0.1,10),
-    # "Fd_tot": (0.1,10),
-    # "NADP_tot": (0.1,10),
-    # "NAD_tot": (0.1,10),
-    # "AP_tot": (0.1,10),
-    # "O2ext": (0.1,10),
-    # "bHi": (0.1,10),
-    # "bHo": (0.1,10),
-    # "cf_lumen": (0.1,10),
-    # "cf_cytoplasm": (0.1,10),
-    "fCin": (0.1,10),
-    # "kH0": (0.1,10),
-    # "kHst": (0.1,10),
-    # "kF": (0.1,10),
-    # "k2": (0.1,10),
-    # "kPQred": (0.1,10),
-    # "kPCox": (0.1,10),
-    # "kFdred": (0.1,10),
-    "k_F1": (0.1,10),
-    # "k_ox1": (0.1,10),
-    "k_Q": (0.1,10),
-    # "k_NDH": (0.1,10),
-    # "k_SDH": (0.1,10),
-    # "k_FN_fwd": (0.1,10),
-    # "k_FN_rev": (0.1,10),
-    "k_pass": (0.1,10),
-    "k_aa": (0.1,10),
-    # "kRespiration": (0.1,10),
-    # "kO2out": (0.1,10),
-    # "kCCM": (0.1,10),
-    "fluo_influence": (0.1,10),
-    # "PBS_free": (0.1,10),
-    # "PBS_PS1": (0.1,10),
-    # "PBS_PS2": (0.1,10),
-    "lcf": (0.1,10),
-    "KMPGA": (0.1,10),
-    "kATPsynth": (0.1,10),
-    # "Pi_mol": (0.1,10),
-    # "HPR": (0.1,10),
-    "kATPconsumption": (0.1,10),
-    "kNADHconsumption": (0.1,10),
-    # "vOxy_max": (0.1,10),
-    # "KMATP": (0.1,10),
-    # "KMNADPH": (0.1,10),
-    # "KMCO2": (0.1,10),
-    # "KIO2": (0.1,10),
-    # "KMO2": (0.1,10),
-    # "KICO2": (0.1,10),
-    # "vCBB_max": (0.1,10),
-    # "kPR": (0.1,10),
-    "kUnquench": (0.1,10),
-    "KMUnquench": (0.1,10),
-    "kQuench": (0.1,10),
-    "KHillFdred": (0.1,10),
-    "nHillFdred": (0.1,10),
-    # "k_O2": (0.1,10),
-    # "cChl": (0.1,10),
-    # "CO2ext_pp": (0.1,10),
-    # "S": (0.1,10),
-    "kCBBactivation": (0.1,10),
-    "KMFdred": (0.1,10),
-    "kOCPactivation": (0.1,10),
-    "kOCPdeactivation": (0.1,10),
-    "OCPmax": (0.1,10),
-    "vNQ_max": (0.1,10),
-    "KMNQ_Qox": (0.1,10),
-    "KMNQ_Fdred": (0.1,10),
+    # "PSIItot": (0.5, 2),
+    # "PSItot": (0.5, 2),
+    # "Q_tot": (0.5, 2),
+    # "PC_tot": (0.5, 2),
+    # "Fd_tot": (0.5, 2),
+    # "NADP_tot": (0.5, 2),
+    # "NAD_tot": (0.5, 2),
+    # "AP_tot": (0.5, 2),
+    # "O2ext": (0.5, 2),
+    # "bHi": (0.5, 2),
+    # "bHo": (0.5, 2),
+    # "cf_lumen": (0.5, 2),
+    # "cf_cytoplasm": (0.5, 2),
+    "fCin": (0.5, 2),
+    # "kH0": (0.5, 2),
+    # "kHst": (0.5, 2),
+    # "kF": (0.5, 2),
+    # "k2": (0.5, 2),
+    # "kPQred": (0.5, 2),
+    # "kPCox": (0.5, 2),
+    # "kFdred": (0.5, 2),
+    "k_F1": (0.5, 2),
+    # "k_ox1": (0.5, 2),
+    "k_Q": (0.5, 2),
+    # "k_NDH": (0.5, 2),
+    # "k_SDH": (0.5, 2),
+    # "k_FN_fwd": (0.5, 2),
+    # "k_FN_rev": (0.5, 2),
+    "k_pass": (0.5, 2),
+    "k_aa": (0.5, 2),
+    # "kRespiration": (0.5, 2),
+    # "kO2out": (0.5, 2),
+    # "kCCM": (0.5, 2),
+    "fluo_influence": (0.5, 2),
+    # "PBS_free": (0.5, 2),
+    # "PBS_PS1": (0.5, 2),
+    # "PBS_PS2": (0.5, 2),
+    "lcf": (0.5, 2),
+    "KMPGA": (0.5, 2),
+    "kATPsynth": (0.5, 2),
+    # "Pi_mol": (0.5, 2),
+    # "HPR": (0.5, 2),
+    "kATPconsumption": (0.5, 2),
+    "kNADHconsumption": (0.5, 2),
+    # "vOxy_max": (0.5, 2),
+    # "KMATP": (0.5, 2),
+    # "KMNADPH": (0.5, 2),
+    # "KMCO2": (0.5, 2),
+    # "KIO2": (0.5, 2),
+    # "KMO2": (0.5, 2),
+    # "KICO2": (0.5, 2),
+    # "vCBB_max": (0.5, 2),
+    # "kPR": (0.5, 2),
+    "kUnquench": (0.5, 2),
+    "KMUnquench": (0.5, 2),
+    "kQuench": (0.5, 2),
+    "KHillFdred": (0.5, 2),
+    "nHillFdred": (0.5, 2),
+    # "k_O2": (0.5, 2),
+    # "cChl": (0.5, 2),
+    # "CO2ext_pp": (0.5, 2),
+    # "S": (0.5, 2),
+    "kCBBactivation": (0.5, 2),
+    "KMFdred": (0.5, 2),
+    "kOCPactivation": (0.5, 2),
+    "kOCPdeactivation": (0.5, 2),
+    "OCPmax": (0.5, 2),
+    "vNQ_max": (0.5, 2),
+    "KMNQ_Qox": (0.5, 2),
+    "KMNQ_Fdred": (0.5, 2),
 }
 
 # %%
@@ -170,7 +170,7 @@ if include_default_model:
     params.loc[0] = pd.Series({k: m.parameters[k] for k in params.columns})
 
 # Initialise container for residuals
-results = pd.Series(index=np.arange(n_mutations+include_default_model), dtype=float)
+results = pd.DataFrame(index=np.arange(n_mutations+include_default_model), columns=(residual_relative_weights.keys()), dtype=float)
 
 if __name__ == "__main__":
     # Setup logging
@@ -195,6 +195,7 @@ if __name__ == "__main__":
                             thread_function,
                             intermediate_results_file=f"../out/{file_prefix}_intermediate.csv",
                             logger_filename=f"../out/{file_prefix}",
+                            return_all=True
                         ),
                         params.iterrows(),
                         timeout=timeout,
@@ -205,7 +206,7 @@ if __name__ == "__main__":
                         try:
                             index, res = next(it)
                             pbar.update(1)
-                            results[index] = res
+                            results.loc[index,:] = res[1]
                         except futures.TimeoutError:
                             pbar.update(1)
                         except StopIteration:

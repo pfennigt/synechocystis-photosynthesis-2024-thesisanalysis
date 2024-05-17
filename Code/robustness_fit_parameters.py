@@ -10,11 +10,14 @@ import pickle
 from datetime import datetime
 from functools import partial
 import warnings
-from scipy.optimize import minimize
+from scipy.optimize import minimize, NonlinearConstraint
 from concurrent import futures
 from pathlib import Path
 import logging
 import traceback
+import time
+from smtplib import SMTP_SSL as SMTP       # this invokes the secure SMTP protocol (port 465, uses SSL)
+from email.mime.text import MIMEText
 
 sys.path.append("../Code")
 
@@ -27,6 +30,7 @@ from function_residuals import calculate_residuals, setup_logger
 # Set the maximum number of parallel threads and the timeout
 # n_workers = 4 # Maximum number of parallel threads
 # timeout = 300 # Timeout for each thread in seconds
+timeout_s = (2 * 24 * 60 * 60) # Timeout for minimisation in seconds, default 172800 (two days)
 
 # Set the prefix to be used for logging and results files
 file_prefix = f"minimise_{datetime.now().strftime('%Y%m%d%H%M')}"
@@ -161,26 +165,62 @@ start_values, bounds = get_fitting_start_and_bounds(fitting_parameter_bounds,m)
 
 p, p_names = start_values.values, start_values.index
 
+## CONSTRAINT
+# Define a constraint function that evaluates if all residuals are improved
+_, default_residuals = calculate_residuals(
+        {},
+        n_workers=5,
+        timeout=300, # s
+        logger_filename=f"../out/{file_prefix}",
+        intermediate_results_file=f"../out/{file_prefix}_intermediate.csv",
+        save_intermediates=True,
+        return_all=True
+        )
+
+# Test if all residuals are at max 1% worse than the default residuals
+def constraint_fun(residuals, default_residuals=default_residuals, tolerance=0.01):
+    return (((default_residuals * (1 + tolerance)) - residuals).dropna() >0 ).all()
+
+
+## CALLBACK
+# Define  callback function that terminates the minimisation after a set time
+start_time = time.time()
+def callback(p, intermediate_result, start_time=start_time, timeout_s=timeout_s):
+    if int(time.time() - start_time) > timeout_s:
+        raise StopIteration
+
+
 # %%
 # Function to calculate residuals with arguments tailored to the minimize function
-def calculate_residuals_minimize(p, p_names, scale_factors=None, file_prefix=""):
+def calculate_residuals_minimize(p, p_names, scale_factors=None, file_prefix="", use_constraint=True, constraint_penalty=10):
     # Undo the scaling
     if scale_factors is not None:
         p = p * scale_factors
 
     _p = get_fitting_parameter_dict(p, p_names)
 
-    res = calculate_residuals(
+    res, res_list = calculate_residuals(
         _p,
         n_workers=5,
         timeout=300, # s
         logger_filename=f"../out/{file_prefix}",
-        save_intermediates=False
+        save_intermediates=False,
+        return_all=True
         )
+    
+    if use_constraint:
+        # Apply the constraint by adding a penalty term if it isn't fulfilled
+        constraint = constraint_fun(
+            residuals=res_list,
+            tolerance=0.01
+        )
+
+        if not constraint:
+            res += constraint_penalty
 
     # Save the residuals
     with open(Path(f"../out/{file_prefix}_intermediates.csv",), "a") as f:
-        f.writelines(f"{','.join([str(x) for x in p])},{res}\n")
+        f.writelines(f"{','.join([str(x) for x in p])},{res},{','.join(list(res_list.index.astype(str)))}\n")
 
     return res
 
@@ -214,14 +254,61 @@ def fit_model_parameters(start_values, bounds=None, opt_kwargs={}, scale_to_valu
         fit.x = fit.x * scale_factors
     return fit
 
+minimiser_options = {
+    "Nelder-Mead": {
+        "method":"Nelder-Mead",
+    },
+    "trust-constr":{
+        "method":"trust-constr",
+        # "constraints":constraint,
+        "callback": callback,
+    }
+}
+
 if __name__ == "__main__":
     # Setup logging
-    InfoLogger = InfoLogger = setup_logger("InfoLogger", Path(f"../out/{file_prefix}_info.log"), level=logging.INFO)
+    InfoLogger = setup_logger("InfoLogger", Path(f"../out/{file_prefix}_info.log"), level=logging.INFO)
     ErrorLogger = setup_logger("ErrorLogger", Path(f"../out/{file_prefix}_err.log"), level=logging.ERROR)
     
     # Log the start of the minimising
     InfoLogger.info("Started run")
     # %%
+
+    # Setup email notifications
+    sender = USERNAME = input("Mail Address")
+    
+    if USERNAME != "":
+        SMTPserver = 'mail.gmx.net'
+        destination = ['tobiaspfennig@gmx.de']
+
+        PASSWORD = input("Mail Password")
+
+        # typical values for text_subtype are plain, html, xml
+        text_subtype = 'plain'
+
+        # Send an email to notify of changes in status
+        def send_email_message(content, subject):
+            try:
+                msg = MIMEText(content, text_subtype)
+                msg['Subject']=       subject
+                msg['From']   = sender # some SMTP servers will do this automatically, not all
+
+                conn = SMTP(SMTPserver)
+                conn.set_debuglevel(False)
+                conn.login(USERNAME, PASSWORD)
+                try:
+                    conn.sendmail(sender, destination, msg.as_string())
+                finally:
+                    conn.quit()
+
+            except:
+                ErrorLogger.error( "mail failed; %s" % "CUSTOM_ERROR" ) # give an error message
+
+        send_email_message(
+            "Minimisation run was successfully started", 
+            "Minimisation started"
+        )
+
     # Locally optimise the model
     try:
         with warnings.catch_warnings() as w:
@@ -232,8 +319,8 @@ if __name__ == "__main__":
                 start_values, 
                 bounds=bounds, 
                 scale_to_value=0.01, 
-                opt_kwargs={"method":"Nelder-Mead"},
-                file_prefix=file_prefix
+                file_prefix=file_prefix,
+                opt_kwargs=minimiser_options["trust-constr"]
                 )
             
             # Save the results
@@ -241,10 +328,26 @@ if __name__ == "__main__":
                 pickle.dump(fit, f)
             
             InfoLogger.info(f"Finished run: {fit.message}")
+
+            if USERNAME != "":
+                send_email_message(
+                    f"Minimisation run successfully:\n{fit.message}", 
+                    "Minimisation successful"
+                )
+    except StopIteration:
+        pass
     except Exception as e:
         ErrorLogger.error("Error encountered\n" + str(traceback.format_exc()))
         InfoLogger.info(f"Finished run with Error")
 
+        if USERNAME != "":
+            send_email_message(
+                f"Minimisation run encountered an Error:\n{e}", 
+                "Minimisation Error"
+            )
 
     # with open(Path(f"../Results/{file_prefix}_results.pickle",), "rb") as f:
     #     test = pickle.load(f)
+    if USERNAME != "": 
+        del USERNAME
+        del PASSWORD

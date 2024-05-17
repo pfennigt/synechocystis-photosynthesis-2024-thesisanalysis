@@ -221,7 +221,7 @@ def calculate_residuals_minimize(p, p_names, scale_factors=None, file_prefix="",
 
     # Save the residuals
     with open(Path(f"../out/{file_prefix}_intermediates.csv",), "a") as f:
-        f.writelines(f"{','.join([str(x) for x in p])},{res},{','.join(list(res_list.index.astype(str)))}\n")
+        f.writelines(f"{','.join([str(x) for x in p])},{res},{','.join(list(res_list.values.astype(str)))}\n")
 
     return res
 

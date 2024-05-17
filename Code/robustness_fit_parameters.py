@@ -172,8 +172,8 @@ _, default_residuals = calculate_residuals(
         n_workers=5,
         timeout=300, # s
         logger_filename=f"../out/{file_prefix}",
-        intermediate_results_file=f"../out/{file_prefix}_intermediate.csv",
-        save_intermediates=True,
+        # intermediate_results_file=f"../out/{file_prefix}_intermediate.csv",
+        save_intermediates=False,
         return_all=True
         )
 

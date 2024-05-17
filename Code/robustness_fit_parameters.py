@@ -282,7 +282,7 @@ if __name__ == "__main__":
         SMTPserver = 'mail.gmx.net'
         destination = ['tobiaspfennig@gmx.de']
 
-        PASSWORD = getpass("Mail Password")
+        PASSWORD = getpass("Mail Password: ")
 
         # typical values for text_subtype are plain, html, xml
         text_subtype = 'plain'

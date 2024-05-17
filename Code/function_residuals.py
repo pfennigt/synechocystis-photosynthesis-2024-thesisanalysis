@@ -1442,7 +1442,7 @@ def calculate_residuals(
         else:
             # Set the residuals as inf if a simulation failed
             residual = np.inf
-            residuals = pd.Series(np.full(n_objectives, np.inf), index=residual_weights.index)
+            residuals = pd.Series(np.full(n_objectives, np.inf), index=residual_normalisation.index)
             end_time = datetime.now()
             InfoLogger.info(f"{thread_index} timed out after {end_time - start_time}")
 
@@ -1454,7 +1454,7 @@ def calculate_residuals(
         ErrorLogger.error(f"Error encountered in {thread_index}\n" + str(traceback.format_exc()))
 
         residual = np.inf
-        residuals = pd.Series(np.full(n_objectives, np.inf), index=residual_weights.index)
+        residuals = pd.Series(np.full(n_objectives, np.inf), index=residual_normalisation.index)
 
 
     # Save the results to an intermediates file

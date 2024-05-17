@@ -18,6 +18,7 @@ import traceback
 import time
 from smtplib import SMTP_SSL as SMTP       # this invokes the secure SMTP protocol (port 465, uses SSL)
 from email.mime.text import MIMEText
+from getpass import getpass
 
 sys.path.append("../Code")
 
@@ -275,13 +276,13 @@ if __name__ == "__main__":
     # %%
 
     # Setup email notifications
-    sender = USERNAME = input("Mail Address")
+    sender = USERNAME = input("Mail Address (no Emails by default): ")
     
     if USERNAME != "":
         SMTPserver = 'mail.gmx.net'
         destination = ['tobiaspfennig@gmx.de']
 
-        PASSWORD = input("Mail Password")
+        PASSWORD = getpass("Mail Password")
 
         # typical values for text_subtype are plain, html, xml
         text_subtype = 'plain'
@@ -305,7 +306,7 @@ if __name__ == "__main__":
                 ErrorLogger.error( "mail failed; %s" % "CUSTOM_ERROR" ) # give an error message
 
         send_email_message(
-            "Minimisation run was successfully started", 
+            f"Minimisation run {file_prefix} was successfully started", 
             "Minimisation started"
         )
 
@@ -331,7 +332,7 @@ if __name__ == "__main__":
 
             if USERNAME != "":
                 send_email_message(
-                    f"Minimisation run successfully:\n{fit.message}", 
+                    f"Minimisation run {file_prefix} finished successfully:\n{fit.message}", 
                     "Minimisation successful"
                 )
     except StopIteration:
@@ -342,7 +343,7 @@ if __name__ == "__main__":
 
         if USERNAME != "":
             send_email_message(
-                f"Minimisation run encountered an Error:\n{e}", 
+                f"Minimisation run {file_prefix} encountered an Error:\n{e}", 
                 "Minimisation Error"
             )
 

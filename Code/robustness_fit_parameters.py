@@ -262,8 +262,10 @@ minimiser_options = {
     "trust-constr": {
         "method": "trust-constr",
         # "constraints":constraint,
-        "maxiter": 5000,
         "callback": callback,
+        "options":{
+            "maxiter": 5000,
+        }
     }
 }
 

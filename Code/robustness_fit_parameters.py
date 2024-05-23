@@ -26,6 +26,9 @@ sys.path.append("../Code")
 from get_current_model import get_model
 from function_residuals import calculate_residuals, setup_logger
 
+# Import the email notifyer
+from SMTPMailSender import SMTPMailSender
+
 
 # %%
 # Set the maximum number of parallel threads and the timeout
@@ -37,6 +40,12 @@ timeout_s = (2 * 24 * 60 * 60) # Timeout for minimisation in seconds, default 17
 file_prefix = f"minimise_{datetime.now().strftime('%Y%m%d%H%M')}"
 # file_prefix = f"residuals_test"
 
+# Setup the email sender
+email = SMTPMailSender(
+    SMTPserver='mail.gmx.net',
+    username='tobiaspfennig@gmx.de',
+    default_destination='tobiaspfennig@gmx.de'
+)
 
 # %%
 # Load the model to get default parameter values
@@ -277,40 +286,9 @@ if __name__ == "__main__":
     # Log the start of the minimising
     InfoLogger.info("Started run")
     # %%
-
-    # Setup email notifications
-    sender = USERNAME = input("Mail Address (no Emails by default): ")
-    
-    if USERNAME != "":
-        SMTPserver = 'mail.gmx.net'
-        destination = ['tobiaspfennig@gmx.de']
-
-        PASSWORD = getpass("Mail Password: ")
-
-        # typical values for text_subtype are plain, html, xml
-        text_subtype = 'plain'
-
-        # Send an email to notify of changes in status
-        def send_email_message(content, subject):
-            try:
-                msg = MIMEText(content, text_subtype)
-                msg['Subject']=       subject
-                msg['From']   = sender # some SMTP servers will do this automatically, not all
-
-                conn = SMTP(SMTPserver)
-                conn.set_debuglevel(False)
-                conn.login(USERNAME, PASSWORD)
-                try:
-                    conn.sendmail(sender, destination, msg.as_string())
-                finally:
-                    conn.quit()
-
-            except:
-                ErrorLogger.error( "mail failed; %s" % "CUSTOM_ERROR" ) # give an error message
-
-        send_email_message(
-            f"Minimisation run {file_prefix} was successfully started", 
-            "Minimisation started"
+    email.send_email(
+            body=f"Minimisation run {file_prefix} was successfully started",
+            subject="Minimisation started"
         )
 
     # Locally optimise the model
@@ -324,7 +302,7 @@ if __name__ == "__main__":
                 bounds=bounds, 
                 scale_to_value=0.01, 
                 file_prefix=file_prefix,
-                opt_kwargs=minimiser_options["trust-constr"]
+                opt_kwargs=minimiser_options["Nelder-Mead"]
                 )
             
             # Save the results
@@ -333,25 +311,21 @@ if __name__ == "__main__":
             
             InfoLogger.info(f"Finished run: {fit.message}")
 
-            if USERNAME != "":
-                send_email_message(
-                    f"Minimisation run {file_prefix} finished successfully:\n{fit.message}", 
-                    "Minimisation successful"
-                )
+            email.send_email(
+                body=f"Minimisation run {file_prefix} finished successfully:\n{fit.message}", 
+                subject="Minimisation successful"
+            )
     except StopIteration:
         pass
     except Exception as e:
         ErrorLogger.error("Error encountered\n" + str(traceback.format_exc()))
-        InfoLogger.info(f"Finished run with Error")
+        InfoLogger.info("Finished run with Error")
 
-        if USERNAME != "":
-            send_email_message(
-                f"Minimisation run {file_prefix} encountered an Error:\n{e}", 
-                "Minimisation Error"
-            )
+        email.send_email(
+            f"Minimisation run {file_prefix} encountered an Error:\n{e}", 
+            "Minimisation Error"
+        )
 
     # with open(Path(f"../Results/{file_prefix}_results.pickle",), "rb") as f:
     #     test = pickle.load(f)
-    if USERNAME != "": 
-        del USERNAME
-        del PASSWORD
+    del email

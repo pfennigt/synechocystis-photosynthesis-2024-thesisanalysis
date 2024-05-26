@@ -195,7 +195,7 @@ def constraint_fun(residuals, default_residuals=default_residuals, tolerance=0.0
 ## CALLBACK
 # Define  callback function that terminates the minimisation after a set time
 start_time = time.time()
-def callback(p, intermediate_result, start_time=start_time, timeout_s=timeout_s):
+def callback(p, intermediate_result=None, start_time=start_time, timeout_s=timeout_s):
     if int(time.time() - start_time) > timeout_s:
         raise StopIteration
 

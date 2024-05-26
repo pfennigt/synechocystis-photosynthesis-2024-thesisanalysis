@@ -267,6 +267,7 @@ def fit_model_parameters(start_values, bounds=None, opt_kwargs={}, scale_to_valu
 minimiser_options = {
     "Nelder-Mead": {
         "method":"Nelder-Mead",
+        "callback": callback,
     },
     "trust-constr": {
         "method": "trust-constr",

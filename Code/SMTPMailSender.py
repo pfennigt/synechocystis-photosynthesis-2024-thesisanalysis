@@ -135,7 +135,7 @@ class SMTPMailSender():
             ValueError: _description_
         """
         # Just return None if no username was set in the beginning
-        if self.USERNAME == "":
+        if self.USERNAME is None:
             return None
 
         if not self._connection_successful:

@@ -753,6 +753,8 @@ data_points_val["right"] = pamdata_select.loc[Fm_timings + point_timing[1]]
 
 def calculate_residuals_ePathways(
         parameter_update,
+        input_model,
+        input_y0,
         Schuurmans,
         Benschop_CO2pps,
         Benschop_CO2uMs,
@@ -774,7 +776,7 @@ def calculate_residuals_ePathways(
 
     # Simulate Wild Type and different mutants
     # Standard model
-    m, y0 = get_model(check_consistency=False, verbose=False)
+    m, y0 = input_model.copy(), input_y0.copy()
 
     # Update the parameters to the current set
     m.update_parameters(parameter_update)
@@ -809,6 +811,8 @@ def calculate_residuals_ePathways(
 
 def calculate_residuals_Schuurmans(
         parameter_update,
+        input_model,
+        input_y0,
         Schuurmans,
         Benschop_CO2pps,
         Benschop_CO2uMs,
@@ -833,7 +837,7 @@ def calculate_residuals_Schuurmans(
     lights = [lip.light_gaussianLED(625, i) for i in intens]
 
     # Standard model
-    m, y0 = get_model(check_consistency=False, verbose=False)
+    m, y0 = input_model.copy(), input_y0.copy()
 
     # Update the parameters to the current set
     m.update_parameters(parameter_update)
@@ -885,6 +889,8 @@ def calculate_residuals_Schuurmans(
 
 def calculate_residuals_Benschop(
         parameter_update,
+        input_model,
+        input_y0,
         Schuurmans,
         Benschop_CO2pps,
         Benschop_CO2uMs,
@@ -911,7 +917,7 @@ def calculate_residuals_Benschop(
     }
 
     # Define the MCA model by adding a flux keeping 3PGA constant
-    m_MCA, y0 = get_model(check_consistency=False, verbose=False)
+    m_MCA, y0 = input_model.copy(), input_y0.copy()
     m_MCA = fnc.add_exchange(m_MCA, exch_dict)
 
     # Update the parameters to the current set
@@ -956,6 +962,8 @@ def calculate_residuals_Benschop(
 
 def calculate_residuals_PAMSP435(
         parameter_update,
+        input_model,
+        input_y0,
         Schuurmans,
         Benschop_CO2pps,
         Benschop_CO2uMs,
@@ -998,7 +1006,7 @@ def calculate_residuals_PAMSP435(
     absorption_coef_PAM435 = strain_params[str(growthlight)]["absorption_coef"]
 
     # Get the latest model version
-    m4, y0 = get_model(check_consistency=False, reduced_size=False, verbose=False)
+    m4, y0 = input_model.copy(), input_y0.copy()
 
     # ADAPTION TO THE STRAIN
     y0.update({"PSII": strain_param["PSIItot"]})
@@ -1086,6 +1094,8 @@ def calculate_residuals_PAMSP435(
 
 def calculate_residuals_PAMSPval(
         parameter_update,
+        input_model,
+        input_y0,
         Schuurmans,
         Benschop_CO2pps,
         Benschop_CO2uMs,
@@ -1203,7 +1213,7 @@ def calculate_residuals_PAMSPval(
     )
 
     # Simulate the validation experiment
-    m, y0 = get_model(verbose=False, check_consistency=False)
+    m, y0 = input_model.copy(), input_y0.copy()
 
     # Update the parameters to the current set
     m.update_parameters(parameter_update)
@@ -1286,6 +1296,8 @@ def suppress_stdout():
 # Function to be run by threads, allowing to change the residual function
 def thread_calculate_residuals(
         parameter_update,
+        input_model,
+        input_y0,
         Schuurmans,
         Benschop_CO2pps,
         Benschop_CO2uMs,
@@ -1302,6 +1314,8 @@ def thread_calculate_residuals(
         ):
     return function(
         parameter_update,
+        input_model,
+        input_y0,
         Schuurmans,
         Benschop_CO2pps,
         Benschop_CO2uMs,
@@ -1318,8 +1332,11 @@ def thread_calculate_residuals(
 
 
 # Overarching function to calculate the total residuals
+m, y0= get_model(check_consistency=False, verbose=False)
 def calculate_residuals(
         parameter_update,
+        input_model=m,
+        input_y0=y0,
         thread_index=-1,
         intermediate_results_file="../out/residuals_intermediate.csv",
         logger_filename="../out/residuals",
@@ -1375,6 +1392,8 @@ def calculate_residuals(
                         partial(
                             thread_calculate_residuals,
                             parameter_update,
+                            input_model,
+                            input_y0,
                             Schuurmans,
                             Benschop_CO2pps,
                             Benschop_CO2uMs,
@@ -1409,6 +1428,8 @@ def calculate_residuals(
                         partial(
                             thread_calculate_residuals,
                             parameter_update,
+                            input_model,
+                            input_y0,
                             Schuurmans,
                             Benschop_CO2pps,
                             Benschop_CO2uMs,

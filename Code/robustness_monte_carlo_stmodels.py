@@ -302,9 +302,9 @@ stmodels = {
             "spillmax": 0.3 
         },
         "param_bounds":{
-            "kspill": (0.91, 1.1),
-            "kunspill": (0.91, 1.1),
-            "spillmax": (0.91, 1.1) ,
+            "kspill": (0.1, 10),
+            "kunspill": (0.1, 10),
+            "spillmax": (0.1, 10),
         }
     },
     "mpbsd":{
@@ -316,9 +316,9 @@ stmodels = {
             "PBS_freemax":0.1
         },
         "param_bounds":{
-            "kPBS_detach": (0.91, 1.1),
-            "kPBS_attach": (0.91, 1.1),
-            "PBS_freemax": (0.91, 1.1),
+            "kPBS_detach": (0.1, 10),
+            "kPBS_attach": (0.1, 10),
+            "PBS_freemax": (0.1, 10),
         }
     },
     "mpbsm":{
@@ -331,10 +331,10 @@ stmodels = {
             "PBS_PS2min": 0.35,
         },
         "param_bounds":{
-            "kPBS_toPS1": (0.91, 1.1),
-            "kPBS_toPS2": (0.91, 1.1),
-            "PBS_PS1min": (0.91, 1.1),
-            "PBS_PS2min": (0.91, 1.1)
+            "kPBS_toPS1": (0.1, 10),
+            "kPBS_toPS2": (0.1, 10),
+            "PBS_PS1min": (0.1, 10),
+            "PBS_PS2min": (0.1, 10)
         }
     }
 }
@@ -429,10 +429,17 @@ if __name__ == "__main__":
 
                 # Save the results
                 results.to_csv(f"../Results/{_file_prefix}_results.csv")
-                InfoLogger.info(f"Finished run {stmodel_nam} successfully")
+                
+                # Classify the results into successes and failures for logging
+                mcres_outcomes = pd.DataFrame(index=results.index, columns=["success", "failed", "time-out"])
+                mcres_outcomes["timeout"] = np.isnan(results).any(axis=1)
+                mcres_outcomes["failed"] = np.isinf(results).any(axis=1)
+                mcres_outcomes["success"] = mcres_succ = np.invert(np.logical_or(mcres_outcomes["timeout"], mcres_outcomes["failed"]))
+
+                InfoLogger.info(f"Finished run {stmodel_nam} successfully. Success: {mcres_outcomes["success"].sum()}, Failed: {mcres_outcomes["failed"].sum()}, Timeout: {mcres_outcomes["timeout"].sum()}")
 
                 email.send_email(
-                    body=f"Monte Carlo run {_file_prefix} finished successfully",
+                    body=f"Monte Carlo run {_file_prefix} finished successfully. Success: {mcres_outcomes["success"].sum()}, Failed: {mcres_outcomes["failed"].sum()}, Timeout: {mcres_outcomes["timeout"].sum()}",
                     subject=f"Monte Carlo {stmodel_nam} successful"
                 )
             

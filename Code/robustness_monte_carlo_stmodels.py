@@ -436,10 +436,10 @@ if __name__ == "__main__":
                 mcres_outcomes["failed"] = np.isinf(results).any(axis=1)
                 mcres_outcomes["success"] = mcres_succ = np.invert(np.logical_or(mcres_outcomes["timeout"], mcres_outcomes["failed"]))
 
-                InfoLogger.info(f"Finished run {stmodel_nam} successfully. Success: {mcres_outcomes["success"].sum()}, Failed: {mcres_outcomes["failed"].sum()}, Timeout: {mcres_outcomes["timeout"].sum()}")
+                InfoLogger.info(f"Finished run {stmodel_nam} successfully. Success: {mcres_outcomes['success'].sum()}, Failed: {mcres_outcomes['failed'].sum()}, Timeout: {mcres_outcomes['timeout'].sum()}")
 
                 email.send_email(
-                    body=f"Monte Carlo run {_file_prefix} finished successfully. Success: {mcres_outcomes["success"].sum()}, Failed: {mcres_outcomes["failed"].sum()}, Timeout: {mcres_outcomes["timeout"].sum()}",
+                    body=f"Monte Carlo run {_file_prefix} finished successfully. Success: {mcres_outcomes['success'].sum()}, Failed: {mcres_outcomes['failed'].sum()}, Timeout: {mcres_outcomes['timeout'].sum()}",
                     subject=f"Monte Carlo {stmodel_nam} successful"
                 )
             

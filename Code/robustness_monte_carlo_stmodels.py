@@ -396,7 +396,7 @@ if __name__ == "__main__":
             
             try:
                 # Execute the thread_function for each parameter input
-                with tqdm(total=n_mutations+include_default_model) as pbar:
+                with tqdm(total=n_mutations+include_default_model, disable=True) as pbar:
                     with pebble.ProcessPool(max_workers=n_workers) as pool:
                         future = pool.map(
                             partial(

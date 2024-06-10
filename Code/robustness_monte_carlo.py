@@ -142,7 +142,7 @@ def thread_function(x, **kwargs):
 
     try:
         # Execute the actual function
-        result = calculate_residuals(p, index, **kwargs)
+        result = calculate_residuals(parameter_update=p, thread_index=index, **kwargs)
 
         return index, result
 

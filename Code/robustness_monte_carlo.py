@@ -21,6 +21,9 @@ sys.path.append("../Code")
 from function_residuals import calculate_residuals, setup_logger, residual_relative_weights
 from get_current_model import get_model
 
+# Import the email notifyer
+from SMTPMailSender import SMTPMailSender
+
 # %%
 # Set the number of evaluated samples
 n_mutations = 10000
@@ -36,6 +39,13 @@ file_prefix = f"montecarlo_allpars_{datetime.now().strftime('%Y%m%d%H%M')}"
 
 # Set the random number generator
 rng = np.random.default_rng(2024)
+
+# Setup the email sender
+email = SMTPMailSender(
+    SMTPserver='mail.gmx.net',
+    username='tobiaspfennig@gmx.de',
+    default_destination='tobiaspfennig@gmx.de'
+)
 
 # %%
 parameter_ranges = {
@@ -180,6 +190,11 @@ if __name__ == "__main__":
     # Log the start of the run
     InfoLogger.info("Started run")
 
+    email.send_email(
+        body=f"Monte Carlo run {file_prefix} was successfully started",
+        subject=f"Monte Carlo run started"
+    )
+
     # Catch unnecessary warnings:
     with warnings.catch_warnings() as w:
         # Cause all warnings to always be triggered.
@@ -188,7 +203,7 @@ if __name__ == "__main__":
         
         try:
             # Execute the thread_function for each parameter input
-            with tqdm(total=n_mutations+include_default_model) as pbar:
+            with tqdm(total=n_mutations+include_default_model, disable=True) as pbar:
                 with pebble.ProcessPool(max_workers=n_workers) as pool:
                     future = pool.map(
                         partial(
@@ -219,8 +234,25 @@ if __name__ == "__main__":
 
             # Save the results
             results.to_csv(f"../Results/{file_prefix}_results.csv")
-            InfoLogger.info(f"Finished run successfully")
+
+            # Classify the results into successes and failures for logging
+            mcres_outcomes = pd.DataFrame(index=results.index, columns=["success", "failed", "time-out"])
+            mcres_outcomes["timeout"] = np.isnan(results).any(axis=1)
+            mcres_outcomes["failed"] = np.isinf(results).any(axis=1)
+            mcres_outcomes["success"] = mcres_succ = np.invert(np.logical_or(mcres_outcomes["timeout"], mcres_outcomes["failed"]))
+
+            InfoLogger.info(f"Finished run successfully. Success: {mcres_outcomes['success'].sum()}, Failed: {mcres_outcomes['failed'].sum()}, Timeout: {mcres_outcomes['timeout'].sum()}")
+
+            email.send_email(
+                body=f"Monte Carlo run {file_prefix} finished successfully. Success: {mcres_outcomes['success'].sum()}, Failed: {mcres_outcomes['failed'].sum()}, Timeout: {mcres_outcomes['timeout'].sum()}",
+                subject=f"Monte Carlo run successful"
+            )
         
         except Exception as e:
             ErrorLogger.error("Error encountered in Monte Carlo function\n" + str(traceback.format_exc()))
             InfoLogger.info("Finished run with Error")
+            
+            email.send_email(
+                body=f"Monte Carlo run {file_prefix} encountered an Error:\n{e}",
+                subject=f"Monte Carlo run Error"
+            )

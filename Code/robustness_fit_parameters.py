@@ -41,11 +41,11 @@ file_prefix = f"minimise_{datetime.now().strftime('%Y%m%d%H%M')}"
 # file_prefix = f"residuals_test"
 
 # Setup the email sender
-email = SMTPMailSender(
-    SMTPserver='mail.gmx.net',
-    username='tobiaspfennig@gmx.de',
-    default_destination='tobiaspfennig@gmx.de'
-)
+# email = SMTPMailSender(
+#     SMTPserver='mail.gmx.net',
+#     username='tobiaspfennig@gmx.de',
+#     default_destination='tobiaspfennig@gmx.de'
+# )
 
 # %%
 # Load the model to get default parameter values

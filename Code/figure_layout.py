@@ -267,7 +267,7 @@ paper_figs["figS6"] = {
     "main": fig,
     "subs": {
         "A": sfig1,
-        "B": sfig2,
+        "C": sfig2,
     }
 }
 

@@ -193,9 +193,9 @@ fig = plt.figure(constrained_layout=True, figsize=figsize(1, 0.5))
 gs = fig.add_gridspec(1, 2)
 
 sfig1 = fig.add_subfigure(gs[0])
-label_figure(sfig1, pos="top left", label="A")
+label_figure(sfig1, pos=(0.0,0.9), label="A")
 sfig2 = fig.add_subfigure(gs[1])
-label_figure(sfig2, pos="top right", label="B")
+label_figure(sfig2, pos=(0.0,0.9), label="B")
 
 paper_figs["figS1"] = {
     "main": fig,

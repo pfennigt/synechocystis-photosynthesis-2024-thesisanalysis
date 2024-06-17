@@ -274,11 +274,32 @@ paper_figs["figS6"] = {
 
 
 # Create figure S7
-paper_figs["figS7"] = {"main": plt.figure(figsize=figsize(1, 0.4))}
+fig = plt.figure(figsize=figsize(1, 0.4))
+label_figure(fig, pos=(0.0,1.01), label="A")
+label_figure(fig, pos=(0.25,1.01), label="B")
+label_figure(fig, pos=(0.5,1.01), label="C")
+label_figure(fig, pos=(0.75,1.01), label="D")
+
+paper_figs["figS7"] = {"main": fig}
 
 # Create figure S8
-paper_figs["figS8"] = {"main": plt.figure(figsize=figsize(1, 0.8))}
+fig = plt.figure(figsize=figsize(1, 0.8))
+label_figure(fig, pos=(0.0,1.01), label="A")
+label_figure(fig, pos=(0.25,1.01), label="B")
+label_figure(fig, pos=(0.5,1.01), label="C")
+label_figure(fig, pos=(0.75,1.01), label="D")
 
+label_figure(fig, pos=(0.0,0.66), label="E")
+label_figure(fig, pos=(0.25,0.66), label="F")
+label_figure(fig, pos=(0.5,0.66), label="G")
+label_figure(fig, pos=(0.75,0.66), label="H")
+
+label_figure(fig, pos=(0.0,0.33), label="I")
+label_figure(fig, pos=(0.25,0.33), label="J")
+label_figure(fig, pos=(0.5,0.33), label="K")
+label_figure(fig, pos=(0.75,0.33), label="L")
+
+paper_figs["figS8"] = {"main": fig}
 
 # Create figure S9
 fig = plt.figure(constrained_layout=True, figsize=figsize(1, 0.5))

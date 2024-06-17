@@ -323,9 +323,17 @@ paper_figs["figS9"] = {
 
 # Create figure S10
 fig = plt.figure(figsize=figsize(1, 0.6))
-label_figure(fig, pos=(0.0,1.01), label="A")
-label_figure(fig, pos=(0.33,1.01), label="B")
-label_figure(fig, pos=(0.66,1.01), label="C")
+label_figure(fig, pos=(0.10,1.01), label="A")
+label_figure(fig, pos=(0.35,1.01), label="B")
+label_figure(fig, pos=(0.60,1.01), label="C")
+
+label_figure(fig, pos=(0.10,0.66), label="D")
+label_figure(fig, pos=(0.35,0.66), label="E")
+label_figure(fig, pos=(0.60,0.66), label="F")
+
+label_figure(fig, pos=(0.10,0.33), label="G")
+label_figure(fig, pos=(0.35,0.33), label="H")
+label_figure(fig, pos=(0.60,0.33), label="I")
 
 paper_figs["figS10"] = {"main": fig}
 

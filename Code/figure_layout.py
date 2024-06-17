@@ -242,7 +242,7 @@ gs = fig.add_gridspec(1,2)
 sfig1 = fig.add_subfigure(gs[0])
 label_figure(sfig1, pos="top left", label="A")
 sfig2 = fig.add_subfigure(gs[1])
-label_figure(sfig2, pos="top right", label="B")
+label_figure(sfig2, pos="top left", label="B")
 
 paper_figs["figS5"] = {
     "main": fig,

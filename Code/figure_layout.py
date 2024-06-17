@@ -348,9 +348,9 @@ paper_figs["figS11"] = {"main": fig}
 
 # Create figure S12
 fig = plt.figure(figsize=figsize(1, 0.5))
-label_figure(fig, pos=(0.0,1.01), label="A")
-label_figure(fig, pos=(0.33,1.01), label="B")
-label_figure(fig, pos=(0.66,1.01), label="C")
+label_figure(fig, pos=(0.0,0.95), label="A")
+label_figure(fig, pos=(0.33,0.95), label="B")
+label_figure(fig, pos=(0.66,0.95), label="C")
 
 paper_figs["figS12"] = {"main": fig}
 

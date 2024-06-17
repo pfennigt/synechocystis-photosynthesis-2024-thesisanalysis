@@ -74,12 +74,12 @@ paper_figs["fig3"] = {
 
 # Create figure 4
 fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.2))
-gs = fig.add_gridspec(4,1, height_ratios=[1,1,1.5,1])
+gs = fig.add_gridspec(4,1, height_ratios=[1,1,1.5,1], hspace=0.12)
 
 sfig1 = fig.add_subfigure(gs[0])
-label_figure(sfig1, pos="top left", label="A")
+label_figure(sfig1, pos=(0.0,0.99), label="A")
 sfig2 = fig.add_subfigure(gs[1])
-label_figure(sfig2, pos="top left", label="B")
+label_figure(sfig2, pos=(0.0,0.99), label="B")
 sfig3 = fig.add_subfigure(gs[2])
 label_figure(sfig3, pos=(0.0,1.01), label="C")
 label_figure(sfig3, pos=(0.25,1.01), label="D")
@@ -90,8 +90,8 @@ label_figure(sfig3, pos=(0.25,0.5), label="H")
 label_figure(sfig3, pos=(0.5,0.5), label="I")
 label_figure(sfig3, pos=(0.75,0.5), label="J")
 sfig4 = fig.add_subfigure(gs[3])
-label_figure(sfig4, pos=(0.0,1.01), label="K")
-label_figure(sfig4, pos=(0.5,1.01), label="L")
+label_figure(sfig4, pos=(0.0,0.99), label="K")
+label_figure(sfig4, pos=(0.5,0.99), label="L")
 
 paper_figs["fig4"] = {
     "main": fig,

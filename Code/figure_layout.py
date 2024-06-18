@@ -284,20 +284,20 @@ paper_figs["figS7"] = {"main": fig}
 
 # Create figure S8
 fig = plt.figure(figsize=figsize(1, 0.8))
-label_figure(fig, pos=(0.0,1.01), label="A")
-label_figure(fig, pos=(0.25,1.01), label="B")
-label_figure(fig, pos=(0.5,1.01), label="C")
-label_figure(fig, pos=(0.75,1.01), label="D")
+label_figure(fig, pos=(0.1,0.89), label="A")
+label_figure(fig, pos=(0.32,0.89), label="B")
+label_figure(fig, pos=(0.52,0.89), label="C")
+label_figure(fig, pos=(0.73,0.89), label="D")
 
-label_figure(fig, pos=(0.0,0.66), label="E")
-label_figure(fig, pos=(0.25,0.66), label="F")
-label_figure(fig, pos=(0.5,0.66), label="G")
-label_figure(fig, pos=(0.75,0.66), label="H")
+label_figure(fig, pos=(0.1,0.61), label="E")
+label_figure(fig, pos=(0.32,0.61), label="F")
+label_figure(fig, pos=(0.52,0.61), label="G")
+label_figure(fig, pos=(0.73,0.61), label="H")
 
-label_figure(fig, pos=(0.0,0.33), label="I")
-label_figure(fig, pos=(0.25,0.33), label="J")
-label_figure(fig, pos=(0.5,0.33), label="K")
-label_figure(fig, pos=(0.75,0.33), label="L")
+label_figure(fig, pos=(0.1,0.335), label="I")
+label_figure(fig, pos=(0.32,0.335), label="J")
+label_figure(fig, pos=(0.52,0.335), label="K")
+label_figure(fig, pos=(0.73,0.335), label="L")
 
 paper_figs["figS8"] = {"main": fig}
 

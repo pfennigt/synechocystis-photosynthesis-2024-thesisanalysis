@@ -106,7 +106,7 @@ paper_figs["fig4"] = {
 
 # Create figure 5
 fig = plt.figure(constrained_layout=True, figsize=figsize(1, 0.6))
-gs = fig.add_gridspec(3,3, hspace=0.12)
+gs = fig.add_gridspec(3,3, hspace=0.15)
 
 sfig1 = fig.add_subfigure(gs[:1, :])
 label_figure(sfig1, pos=(0.0,1.01), label="A")

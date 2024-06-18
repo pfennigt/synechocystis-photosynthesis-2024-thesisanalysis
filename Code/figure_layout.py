@@ -106,7 +106,7 @@ paper_figs["fig4"] = {
 
 # Create figure 5
 fig = plt.figure(constrained_layout=True, figsize=figsize(1, 0.6))
-gs = fig.add_gridspec(3,3, hspace=0.15)
+gs = fig.add_gridspec(3,3, hspace=0.15, height_ratios=[1,0.01,2])
 
 sfig1 = fig.add_subfigure(gs[:1, :])
 label_figure(sfig1, pos=(0.0,1.01), label="A")
@@ -115,9 +115,10 @@ label_figure(sfig1, pos=(0.5,1.01), label="C")
 label_figure(sfig1, pos=(0.75,1.01), label="D")
 sfig2 = fig.add_subfigure(gs[1:, :1])
 label_figure(sfig2, pos="top left", label="E")
-sfig3 = fig.add_subfigure(gs[1:, 1:])
-label_figure(sfig3, pos=(0.0,1.01), label="F")
-label_figure(sfig3, pos=(0.5,1.01), label="G")
+sfig3 = fig.add_subfigure(gs[2:, 1:])
+sfig4 = fig.add_subfigure(gs[1, 1:])
+label_figure(sfig4, pos=(0.0,1.01), label="F")
+label_figure(sfig4, pos=(0.5,1.01), label="G")
 
 paper_figs["fig5"] = {
     "main": fig,
@@ -275,10 +276,10 @@ paper_figs["figS6"] = {
 
 # Create figure S7
 fig = plt.figure(figsize=figsize(1, 0.4))
-label_figure(fig, pos=(0.0,1.01), label="A")
-label_figure(fig, pos=(0.25,1.01), label="B")
-label_figure(fig, pos=(0.5,1.01), label="C")
-label_figure(fig, pos=(0.75,1.01), label="D")
+label_figure(fig, pos=(0.0,1.1), label="A")
+label_figure(fig, pos=(0.25,1.1), label="B")
+label_figure(fig, pos=(0.5,1.1), label="C")
+label_figure(fig, pos=(0.75,1.1), label="D")
 
 paper_figs["figS7"] = {"main": fig}
 

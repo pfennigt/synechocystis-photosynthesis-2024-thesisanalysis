@@ -207,7 +207,7 @@ paper_figs["figS1"] = {
 
 
 # Create figure S2
-paper_figs["figS2"] = {"main": plt.figure(figsize=figsize(0.6, 0.5))}
+paper_figs["figS2"] = {"main": plt.figure(figsize=figsize(0.6, 0.4))}
 
 # Create figure S3
 paper_figs["figS3"] = {"main": plt.figure(figsize=figsize(1, 0.4))}

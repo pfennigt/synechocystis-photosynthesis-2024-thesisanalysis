@@ -1,10 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+scaling_factor = 0.32
 
 # Function for setting the default figure size
 def figsize(rel_width, rel_height):
-    default_width = 7.5  # inches
+    default_width = 15 * scaling_factor  # inches
 
     return (rel_width * default_width, rel_height * default_width)
 
@@ -37,7 +38,7 @@ def rcfac(rckwarg: str, factor: float):
 
 # Generally halve the size and width of fonts, lines, etc.
 plt.rcParams.update(
-    {k:v*0.5 for k,v in plt.rcParams.items() if (k.endswith("size") or k.endswith("width") or k.endswith("pad")) and isinstance(v, (int, float))}
+    {k:v*scaling_factor for k,v in plt.rcParams.items() if (k.endswith("size") or k.endswith("width") or k.endswith("pad")) and isinstance(v, (int, float))}
 )
 
 # plt.rcParams.update({
@@ -59,7 +60,7 @@ plt.rcParams["figure.max_open_warning"] = 30
 
 # MAIN FIGURES
 # Create figure 1
-paper_figs["fig1"] = {"main": plt.figure(figsize=figsize(1, 0.4))}
+paper_figs["Fig1"] = {"main": plt.figure(figsize=figsize(1, 0.4))}
 
 
 # Create figure 2
@@ -71,7 +72,7 @@ label_figure(sfig1, pos="top left", label="A")
 sfig2 = fig.add_subfigure(gs[1])
 label_figure(sfig2, pos="top left", label="B")
 
-paper_figs["fig2"] = {
+paper_figs["Fig7"] = {
     "main": fig,
     "subs": {
         "A": sfig1,
@@ -96,7 +97,7 @@ label_figure(sfig3, pos=(0.03,0.5), label="G")
 sfig4 = fig.add_subfigure(gs[1, -1])
 label_figure(sfig4, pos=(0.03,1.01), label="H")
 
-paper_figs["fig3"] = {
+paper_figs["Fig2"] = {
     "main": fig,
     "subs": {
         "A": sfig2,
@@ -127,7 +128,7 @@ sfig4 = fig.add_subfigure(gs[3])
 label_figure(sfig4, pos=(0.0,0.99), label="K")
 label_figure(sfig4, pos=(0.5,0.99), label="L")
 
-paper_figs["fig4"] = {
+paper_figs["Fig3"] = {
     "main": fig,
     "subs": {
         "A": sfig1,
@@ -154,7 +155,7 @@ sfig4 = fig.add_subfigure(gs[1, 1:])
 label_figure(sfig4, pos=(0.0,1.01), label="F")
 label_figure(sfig4, pos=(0.5,1.01), label="G")
 
-paper_figs["fig5"] = {
+paper_figs["Fig4"] = {
     "main": fig,
     "subs": {
         "A": sfig1,
@@ -178,7 +179,7 @@ label_figure(sfig3, pos="top left", label="D")
 sfig4 = fig.add_subfigure(gs[1, 2])
 label_figure(sfig4, pos="top left", label="E")
 
-paper_figs["fig6"] = {
+paper_figs["Fig6"] = {
     "main": fig,
     "subs": {
         "A": sfig1,
@@ -203,7 +204,7 @@ sfig3 = fig.add_subfigure(gs[2, :])
 label_figure(sfig3, pos=(0.0,1.01), label="E")
 label_figure(sfig3, pos=(0.5,1.01), label="F")
 
-paper_figs["fig7"] = {
+paper_figs["Fig5"] = {
     "main": fig,
     "subs": {
         "A": sfig1,
@@ -219,7 +220,7 @@ label_figure(fig, pos=(0.1,0.95), label="A")
 label_figure(fig, pos=(0.37,0.95), label="B")
 label_figure(fig, pos=(0.64,0.95), label="C")
 
-paper_figs["fig8"] = {"main": fig}
+paper_figs["Fig8"] = {"main": fig}
 
 
 # SUPPLEMENTAL FIGURES
@@ -232,7 +233,7 @@ label_figure(sfig1, pos=(0.0,0.9), label="A")
 sfig2 = fig.add_subfigure(gs[1])
 label_figure(sfig2, pos=(0.0,0.9), label="B")
 
-paper_figs["figS1"] = {
+paper_figs["FigS1"] = {
     "main": fig,
     "subs": {
         "A": sfig1,
@@ -242,10 +243,10 @@ paper_figs["figS1"] = {
 
 
 # Create figure S2
-paper_figs["figS2"] = {"main": plt.figure(figsize=figsize(0.6, 0.4))}
+paper_figs["FigS3"] = {"main": plt.figure(figsize=figsize(0.6, 0.4))}
 
 # Create figure S3
-paper_figs["figS3"] = {"main": plt.figure(figsize=figsize(1, 0.4))}
+paper_figs["FigS7"] = {"main": plt.figure(figsize=figsize(1, 0.4))}
 
 
 
@@ -260,7 +261,7 @@ label_figure(sfig2, pos=(0.0,0.8), label="B")
 sfig3 = fig.add_subfigure(gs[2])
 label_figure(sfig3, pos=(0.0,0.8), label="C")
 
-paper_figs["figS4"] = {
+paper_figs["FigS11"] = {
     "main": fig,
     "subs": {
         "A": sfig1,
@@ -279,7 +280,7 @@ label_figure(sfig1, pos="top left", label="A")
 sfig2 = fig.add_subfigure(gs[1])
 label_figure(sfig2, pos="top left", label="B")
 
-paper_figs["figS5"] = {
+paper_figs["FigS2"] = {
     "main": fig,
     "subs": {
         "A": sfig1,
@@ -299,7 +300,7 @@ sfig2 = fig.add_subfigure(gs[1])
 label_figure(sfig2, pos=(0.0,1.01), label="C")
 label_figure(sfig2, pos=(0.0,0.5), label="D")
 
-paper_figs["figS6"] = {
+paper_figs["FigS4"] = {
     "main": fig,
     "subs": {
         "A": sfig1,
@@ -315,7 +316,7 @@ label_figure(fig, pos=(0.25,1.1), label="B")
 label_figure(fig, pos=(0.5,1.1), label="C")
 label_figure(fig, pos=(0.75,1.1), label="D")
 
-paper_figs["figS7"] = {"main": fig}
+paper_figs["FigS6"] = {"main": fig}
 
 # Create figure S8
 fig = plt.figure(figsize=figsize(1, 0.8))
@@ -334,7 +335,7 @@ label_figure(fig, pos=(0.32,0.335), label="J")
 label_figure(fig, pos=(0.52,0.335), label="K")
 label_figure(fig, pos=(0.73,0.335), label="L")
 
-paper_figs["figS8"] = {"main": fig}
+paper_figs["FigS5"] = {"main": fig}
 
 # Create figure S9
 fig = plt.figure(constrained_layout=True, figsize=figsize(1, 0.5))
@@ -346,7 +347,7 @@ sfig2 = fig.add_subfigure(gs[1])
 label_figure(sfig2, pos="top left", label="B")
 
 
-paper_figs["figS9"] = {
+paper_figs["FigS13"] = {
     "main": fig,
     "subs": {
         "A": sfig1,
@@ -370,7 +371,7 @@ label_figure(fig, pos=(0.10,0.34), label="G")
 label_figure(fig, pos=(0.39,0.34), label="H")
 label_figure(fig, pos=(0.67,0.34), label="I")
 
-paper_figs["figS10"] = {"main": fig}
+paper_figs["FigS10"] = {"main": fig}
 
 
 # Create figure S11
@@ -378,7 +379,7 @@ fig = plt.figure(figsize=figsize(0.7, 0.4))
 label_figure(fig, pos=(0.0,1), label="A")
 label_figure(fig, pos=(0.5,1), label="B")
 
-paper_figs["figS11"] = {"main": fig}
+paper_figs["FigS8"] = {"main": fig}
 
 
 # Create figure S12
@@ -387,7 +388,7 @@ label_figure(fig, pos=(0.0,0.95), label="A")
 label_figure(fig, pos=(0.33,0.95), label="B")
 label_figure(fig, pos=(0.66,0.95), label="C")
 
-paper_figs["figS12"] = {"main": fig}
+paper_figs["FigS9"] = {"main": fig}
 
 
 
@@ -397,4 +398,4 @@ label_figure(fig, pos=(0.1,0.93), label="A")
 label_figure(fig, pos=(0.36,0.93), label="B")
 label_figure(fig, pos=(0.65,0.93), label="C")
 
-paper_figs["figS13"] = {"main": fig}
+paper_figs["FigS12"] = {"main": fig}

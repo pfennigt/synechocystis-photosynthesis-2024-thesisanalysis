@@ -1,21 +1,55 @@
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 # Function for setting the default figure size
 def figsize(rel_width, rel_height):
-    default_width = 15 # inches
+    default_width = 7.5  # inches
 
     return (rel_width * default_width, rel_height * default_width)
+
 
 # Function for labelling figures with letters
 def label_figure(fig, pos, label):
     if isinstance(pos, str):
         if pos == "top left":
-            pos = (0,1.01)
+            pos = (0, 1.01)
         elif pos == "top right":
-            pos = (0.98,1.01)
+            pos = (0.98, 1.01)
     
     if isinstance(pos, tuple):
-        fig.text(*pos, label, size=30)
+        fig.text(*pos, label, size=13)
+
+
+# Get a factor of the original rcParam as value
+def rcfac(rckwarg: str, factor: float):
+    old = plt.rcParams.get(rckwarg)
+    if isinstance(old, int):
+        return int(np.round(old * factor))
+    elif isinstance(old, float):
+        return old * factor
+    elif old is None:
+        raise ValueError(f"not an rcParam: {rckwarg}")
+    else:
+        raise ValueError(f"unsupported type of rcParam: {type(old)}")
+
+# Set the default parameters for plots
+
+# Generally halve the size and width of fonts, lines, etc.
+plt.rcParams.update(
+    {k:v*0.5 for k,v in plt.rcParams.items() if (k.endswith("size") or k.endswith("width") or k.endswith("pad")) and isinstance(v, (int, float))}
+)
+
+# plt.rcParams.update({
+#     "font.size": 5,
+
+#     "xtick.major.size": 1.25,
+#     "xtick.minor.size": 1,
+
+#     "ytick.major.size": 1.25,
+#     "ytick.minor.size": 1,
+# })
+        
 
 
 # Create the Figure layouts
@@ -47,7 +81,7 @@ paper_figs["fig2"] = {
 
 
 # Create figure 3
-fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1))
+fig = plt.figure(constrained_layout=True, figsize=figsize(1, 0.8))
 gs = fig.add_gridspec(2, 2, height_ratios=[2, 3], width_ratios=[2,1])
 
 sfig2 = fig.add_subfigure(gs[0, :])
@@ -73,7 +107,7 @@ paper_figs["fig3"] = {
 
 
 # Create figure 4
-fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.2))
+fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.1))
 gs = fig.add_gridspec(4,1, height_ratios=[1,1,1.5,1], hspace=0.12)
 
 sfig1 = fig.add_subfigure(gs[0])
@@ -156,7 +190,7 @@ paper_figs["fig6"] = {
 
 
 # Create figure 7
-fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1))
+fig = plt.figure(constrained_layout=True, figsize=figsize(1, 0.9))
 gs = fig.add_gridspec(3,3, height_ratios=[0.5,1,1], hspace=0.12)
 
 sfig1 = fig.add_subfigure(gs[0, :])
@@ -180,7 +214,7 @@ paper_figs["fig7"] = {
 
 
 # Create figure 8
-fig = plt.figure(figsize=figsize(1, 0.4))
+fig = plt.figure(figsize=figsize(1, 0.3))
 label_figure(fig, pos=(0.1,0.95), label="A")
 label_figure(fig, pos=(0.37,0.95), label="B")
 label_figure(fig, pos=(0.64,0.95), label="C")
@@ -275,7 +309,7 @@ paper_figs["figS6"] = {
 
 
 # Create figure S7
-fig = plt.figure(figsize=figsize(1, 0.4))
+fig = plt.figure(figsize=figsize(1, 0.3))
 label_figure(fig, pos=(0.0,1.1), label="A")
 label_figure(fig, pos=(0.25,1.1), label="B")
 label_figure(fig, pos=(0.5,1.1), label="C")
@@ -360,7 +394,7 @@ paper_figs["figS12"] = {"main": fig}
 # Create figure S13
 fig = plt.figure(figsize=figsize(1, 0.35))
 label_figure(fig, pos=(0.1,0.93), label="A")
-label_figure(fig, pos=(0.38,0.93), label="B")
+label_figure(fig, pos=(0.36,0.93), label="B")
 label_figure(fig, pos=(0.65,0.93), label="C")
 
 paper_figs["figS13"] = {"main": fig}

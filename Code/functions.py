@@ -736,6 +736,8 @@ def add_lightbar(
     spectrum_maskalpha=0.6,
     pad_top=0,
     y_pos=None,
+    box_linewidth=1,
+    ticks_linewidth=1.5,
 ):
     # Get all the different modelled times and lights
     alltimes = s.get_time()
@@ -904,7 +906,7 @@ def add_lightbar(
             spec_pos[[1, 1]],
             spec_pos[[2, 3]],
             color="black",
-            linewidth=1,
+            linewidth=box_linewidth,
             scalex=False,
             scaley=False,
         )
@@ -917,7 +919,7 @@ def add_lightbar(
             edgecolor="black",
             alpha=1,
             in_layout=True,
-            linewidth=1,
+            linewidth=box_linewidth,
         )
     )
 
@@ -926,7 +928,7 @@ def add_lightbar(
         [tickpos, tickpos],
         [tick_bottom, tick_bottom + float(np.diff(np.array(axylim)) * 0.015)],
         color="black",
-        linewidth=1.5,
+        linewidth=ticks_linewidth,
         scalex=False,
         scaley=False,
     )

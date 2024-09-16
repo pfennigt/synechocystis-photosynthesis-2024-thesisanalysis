@@ -11,7 +11,7 @@ It considers important adaptive processes like state transitions and Non-Photoch
 
 The model is implemented in Python, using **modelbase** package for modular construction of kinetic models (Van Aalst, [doi: 10.1186/s12859-021-04122-7](https://doi.org/10.1186/s12859-021-04122-7)).
 
-![An image showing the reactions included in the model](Figures/model_scheme.png "Overview over the model")
+![An image showing the reactions included in the model](Figures/Model_scheme_v13_lesscolor.png "Overview over the model")
 <sub>Abbreviations: 2PG: 2-phosphoglycolate, 3PGA: 3-phosphoglycerate, ADP: Adenosine diphosphate, ATP: Adenosine triphosphate, ATPsynth: ATP synthase, CBB: Calvin-Benson-Bassham cycle, CCM: Carbon Concentrating Mechanism, COX(aa3): Cytochrome c oxidase, Cyd(bd): Cytochrome bd quinol oxidase, Cyto b6f: Cytochrome b6f complex, FNR: Ferredoxin-NADP+ Reductase, Fd: Ferredoxin, NADP+: Nicotinamide adenine dinucleotide phosphate, NADPH: reduced NADP, NAD+: Nicotinamide adenine dinucleotide, NADH: reduced NAD, NDH-2: NAD(P)H Dehydrogenase complex 2, OCP: Orange Carotenoid Protein, Oxy: RuBisCO oxygenation, PC: Plastocyanine, PQ: Plastoquinone, PR: Photorespiration, PSI: Photosystem I, PSII: Photosystem II, SDH: Succinate dehydrogenase
 
 ## What to use it for
@@ -56,6 +56,7 @@ To set up the conda environment:
    ```
 5. Now you can run the notebooks without worrying about missing dependencies.
 
+By running the file `Notebooks/paper_figures.ipynb` you will perform all simulations on your local machine and recreate all figures. To view the simulation results performed by us, please download the file `Results.zip` from <https://zenodo.org/doi/10.5281/zenodo.8186123>. Then set the two flags `"recalculate_all"` in `paper_figures.ipynb` to `False`.
 <!-- ## Dependencies
 
 The code and notebooks in this repository require the following dependencies:
@@ -72,7 +73,7 @@ You can cite this work by referencing the latest publication:
 Tobias Pfennig, Elena Kullmann, Tomáš Zavřel, Andreas Nakielski, Oliver Ebenhöh, Jan Červený, Gábor Bernát, Anna Matuszyńska  
 PLoS Comput Biol 20(9): e1012445. <https://doi.org/10.1371/journal.pcbi.1012445>
 
-An archived version of this project is also deposited on Zenodo with the DOI <https://doi.org/10.5281/zenodo.8186124>
+An archived version of this project is also deposited on Zenodo with the DOI <https://zenodo.org/doi/10.5281/zenodo.8186123>
 
 ## How to Raise Issues
 

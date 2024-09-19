@@ -57,6 +57,7 @@ plt.rcParams.update(
 paper_figs = {}
 
 plt.rcParams["figure.max_open_warning"] = 30
+plt.rcParams['figure.dpi'] = 300  # 600 DPI
 
 # MAIN FIGURES
 # Create figure 1

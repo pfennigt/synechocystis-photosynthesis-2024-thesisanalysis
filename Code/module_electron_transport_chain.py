@@ -106,13 +106,13 @@ def calculate_v(S, P, dG, dG0, kfwd, krev, RT):
         float: kinetic rate under the given concentrations
     """
     # Calculate the forward reaction rate
-    vfwd = kfwd * S * (1 - np.exp(dG))
+    vfwd = kfwd * S * (1 - np.exp(dG / RT))
 
     # If any delta G is positive, also calculate the reverse rate
     dG_pos = dG > 0
     if np.any(dG_pos):
         Keq = np.exp(-dG0 / RT)
-        vrev = krev / Keq * P * (np.exp(-dG) - 1)
+        vrev = krev / Keq * P * (np.exp(-dG / RT) - 1)
 
         # Replace those rates with a positive delta G with the one calculated with the reverse formula
         vfwd[dG_pos] = vrev[dG_pos]

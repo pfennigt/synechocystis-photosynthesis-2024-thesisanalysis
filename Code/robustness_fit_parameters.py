@@ -37,7 +37,7 @@ from SMTPMailSender import SMTPMailSender
 timeout_s = (2 * 24 * 60 * 60) # Timeout for minimisation in seconds, default 172800 (two days)
 
 # Set the prefix to be used for logging and results files
-file_prefix = f"minimise_{datetime.now().strftime('%Y%m%d%H%M')}"
+file_prefix = f"minimise_manfit_{datetime.now().strftime('%Y%m%d%H%M')}"
 # file_prefix = f"residuals_test"
 
 # Setup the email sender

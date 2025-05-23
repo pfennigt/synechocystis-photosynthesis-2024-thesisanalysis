@@ -152,7 +152,7 @@ def setup_logger(name, log_file, level=logging.INFO):
     return logger
 
 # %%
-def get_pathways_at_lights(model, y0, lights, intens, integrator_kwargs=integrator_kwargs["default"], retry_kwargs=None, retry_unsuccessful=False):
+def get_pathways_at_lights(model, y0, lights, intens, integrator_kwargs=integrator_kwargs["default"], retry_kwargs=None, retry_unsuccessful=True):
     sims = []
     for i, light in zip(intens, lights):
         m = model.copy()

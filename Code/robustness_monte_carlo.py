@@ -34,7 +34,7 @@ n_workers = 50 # Maximum number of parallel threads
 timeout = 600 # Timeout for each thread in seconds
 
 # Set the prefix to be used for logging and results files
-file_prefix = f"montecarlo_manfit_f01_{datetime.now().strftime('%Y%m%d%H%M')}"
+file_prefix = f"montecarlo_allpar_f01_{datetime.now().strftime('%Y%m%d%H%M')}"
 # file_prefix = f"residuals_test"
 
 # Set the random number generator
@@ -49,68 +49,68 @@ email = SMTPMailSender(
 
 # %%
 parameter_ranges = {
-    # "PSIItot": (0.9,1.1),
-    # "PSItot": (0.9,1.1),
-    # "Q_tot": (0.9,1.1),
-    # "PC_tot": (0.9,1.1),
-    # "Fd_tot": (0.9,1.1),
-    # "NADP_tot": (0.9,1.1),
-    # "NAD_tot": (0.9,1.1),
-    # "AP_tot": (0.9,1.1),
-    # "O2ext": (0.9,1.1),
-    # "bHi": (0.9,1.1),
-    # "bHo": (0.9,1.1),
-    # "cf_lumen": (0.9,1.1),
-    # "cf_cytoplasm": (0.9,1.1),
+    "PSIItot": (0.9,1.1),
+    "PSItot": (0.9,1.1),
+    "Q_tot": (0.9,1.1),
+    "PC_tot": (0.9,1.1),
+    "Fd_tot": (0.9,1.1),
+    "NADP_tot": (0.9,1.1),
+    "NAD_tot": (0.9,1.1),
+    "AP_tot": (0.9,1.1),
+    "O2ext": (0.9,1.1),
+    "bHi": (0.9,1.1),
+    "bHo": (0.9,1.1),
+    "cf_lumen": (0.9,1.1),
+    "cf_cytoplasm": (0.9,1.1),
     "fCin": (0.9,1.1),  # manually fitted
-    # "kH0": (0.9,1.1),
-    # "kHst": (0.9,1.1),
-    # "kF": (0.9,1.1),
-    # "k2": (0.9,1.1),
-    # "kPQred": (0.9,1.1),
-    # "kPCox": (0.9,1.1),
-    # "kFdred": (0.9,1.1),
+    "kH0": (0.9,1.1),
+    "kHst": (0.9,1.1),
+    "kF": (0.9,1.1),
+    "k2": (0.9,1.1),
+    "kPQred": (0.9,1.1),
+    "kPCox": (0.9,1.1),
+    "kFdred": (0.9,1.1),
     "k_F1": (0.9,1.1),  # manually fitted
-    # "k_ox1": (0.9,1.1),
+    "k_ox1": (0.9,1.1),
     "k_Q": (0.9,1.1),  # manually fitted
-    # "k_NDH": (0.9,1.1),
-    # "k_SDH": (0.9,1.1),
-    # "k_FN_fwd": (0.9,1.1),
-    # "k_FN_rev": (0.9,1.1),
+    "k_NDH": (0.9,1.1),
+    "k_SDH": (0.9,1.1),
+    "k_FN_fwd": (0.9,1.1),
+    "k_FN_rev": (0.9,1.1),
     "k_pass": (0.9,1.1),  # manually fitted
     "k_aa": (0.9,1.1),  # manually fitted
-    # "kRespiration": (0.9,1.1),
-    # "kO2out": (0.9,1.1),
-    # "kCCM": (0.9,1.1),
+    "kRespiration": (0.9,1.1),
+    "kO2out": (0.9,1.1),
+    "kCCM": (0.9,1.1),
     "fluo_influence": (0.9,1.1),  # manually fitted
-    # "PBS_free": (0.9,1.1),
-    # "PBS_PS1": (0.9,1.1),
-    # "PBS_PS2": (0.9,1.1),
+    "PBS_free": (0.9,1.1),
+    "PBS_PS1": (0.9,1.1),
+    "PBS_PS2": (0.9,1.1),
     "lcf": (0.9,1.1),  # manually fitted
     "KMPGA": (0.9,1.1),  # manually fitted
     "kATPsynth": (0.9,1.1),  # manually fitted
-    # "Pi_mol": (0.9,1.1),
-    # "HPR": (0.9,1.1),
+    "Pi_mol": (0.9,1.1),
+    "HPR": (0.9,1.1),
     "kATPconsumption": (0.9,1.1),  # manually fitted
     "kNADHconsumption": (0.9,1.1),  # manually fitted
-    # "vOxy_max": (0.9,1.1),
-    # "KMATP": (0.9,1.1),
-    # "KMNADPH": (0.9,1.1),
-    # "KMCO2": (0.9,1.1),
-    # "KIO2": (0.9,1.1),
-    # "KMO2": (0.9,1.1),
-    # "KICO2": (0.9,1.1),
-    # "vCBB_max": (0.9,1.1),
-    # "kPR": (0.9,1.1),
+    "vOxy_max": (0.9,1.1),
+    "KMATP": (0.9,1.1),
+    "KMNADPH": (0.9,1.1),
+    "KMCO2": (0.9,1.1),
+    "KIO2": (0.9,1.1),
+    "KMO2": (0.9,1.1),
+    "KICO2": (0.9,1.1),
+    "vCBB_max": (0.9,1.1),
+    "kPR": (0.9,1.1),
     "kUnquench": (0.9,1.1),  # manually fitted
     "KMUnquench": (0.9,1.1),  # manually fitted
     "kQuench": (0.9,1.1),  # manually fitted
     "KHillFdred": (0.9,1.1),  # manually fitted
     "nHillFdred": (0.9,1.1),  # manually fitted
-    # "k_O2": (0.9,1.1),
-    # "cChl": (0.9,1.1),
-    # "CO2ext_pp": (0.9,1.1),
-    # "S": (0.9,1.1),
+    "k_O2": (0.9,1.1),
+    "cChl": (0.9,1.1),
+    "CO2ext_pp": (0.9,1.1),
+    "S": (0.9,1.1),
     "kCBBactivation": (0.9,1.1),  # manually fitted
     "KMFdred": (0.9,1.1),  # manually fitted
     "kOCPactivation": (0.9,1.1),  # manually fitted

@@ -34,7 +34,7 @@ n_workers = 50 # Maximum number of parallel threads
 timeout = 600 # Timeout for each thread in seconds
 
 # Set the prefix to be used for logging and results files
-file_prefix = f"montecarlo_allpar_f5_{datetime.now().strftime('%Y%m%d%H%M')}"
+file_prefix = f"montecarlo_manfit_f5_{datetime.now().strftime('%Y%m%d%H%M')}"
 # file_prefix = f"residuals_test"
 
 # Set the random number generator
@@ -49,68 +49,68 @@ email = SMTPMailSender(
 
 # %%
 parameter_ranges = {
-    "PSIItot": (0.2,5),
-    "PSItot": (0.2,5),
-    "Q_tot": (0.2,5),
-    "PC_tot": (0.2,5),
-    "Fd_tot": (0.2,5),
-    "NADP_tot": (0.2,5),
-    "NAD_tot": (0.2,5),
-    "AP_tot": (0.2,5),
-    "O2ext": (0.2,5),
-    "bHi": (0.2,5),
-    "bHo": (0.2,5),
-    "cf_lumen": (0.2,5),
-    "cf_cytoplasm": (0.2,5),
+    # "PSIItot": (0.2,5),
+    # "PSItot": (0.2,5),
+    # "Q_tot": (0.2,5),
+    # "PC_tot": (0.2,5),
+    # "Fd_tot": (0.2,5),
+    # "NADP_tot": (0.2,5),
+    # "NAD_tot": (0.2,5),
+    # "AP_tot": (0.2,5),
+    # "O2ext": (0.2,5),
+    # "bHi": (0.2,5),
+    # "bHo": (0.2,5),
+    # "cf_lumen": (0.2,5),
+    # "cf_cytoplasm": (0.2,5),
     "fCin": (0.2,5),  # manually fitted
-    "kH0": (0.2,5),
-    "kHst": (0.2,5),
-    "kF": (0.2,5),
-    "k2": (0.2,5),
-    "kPQred": (0.2,5),
-    "kPCox": (0.2,5),
-    "kFdred": (0.2,5),
+    # "kH0": (0.2,5),
+    # "kHst": (0.2,5),
+    # "kF": (0.2,5),
+    # "k2": (0.2,5),
+    # "kPQred": (0.2,5),
+    # "kPCox": (0.2,5),
+    # "kFdred": (0.2,5),
     "k_F1": (0.2,5),  # manually fitted
-    "k_ox1": (0.2,5),
+    # "k_ox1": (0.2,5),
     "k_Q": (0.2,5),  # manually fitted
-    "k_NDH": (0.2,5),
-    "k_SDH": (0.2,5),
-    "k_FN_fwd": (0.2,5),
-    "k_FN_rev": (0.2,5),
+    # "k_NDH": (0.2,5),
+    # "k_SDH": (0.2,5),
+    # "k_FN_fwd": (0.2,5),
+    # "k_FN_rev": (0.2,5),
     "k_pass": (0.2,5),  # manually fitted
     "k_aa": (0.2,5),  # manually fitted
-    "kRespiration": (0.2,5),
-    "kO2out": (0.2,5),
-    "kCCM": (0.2,5),
+    # "kRespiration": (0.2,5),
+    # "kO2out": (0.2,5),
+    # "kCCM": (0.2,5),
     "fluo_influence": (0.2,5),  # manually fitted
-    "PBS_free": (0.2,5),
-    "PBS_PS1": (0.2,5),
-    "PBS_PS2": (0.2,5),
+    # "PBS_free": (0.2,5),
+    # "PBS_PS1": (0.2,5),
+    # "PBS_PS2": (0.2,5),
     "lcf": (0.2,5),  # manually fitted
     "KMPGA": (0.2,5),  # manually fitted
     "kATPsynth": (0.2,5),  # manually fitted
-    "Pi_mol": (0.2,5),
-    "HPR": (0.2,5),
+    # "Pi_mol": (0.2,5),
+    # "HPR": (0.2,5),
     "kATPconsumption": (0.2,5),  # manually fitted
     "kNADHconsumption": (0.2,5),  # manually fitted
-    "vOxy_max": (0.2,5),
-    "KMATP": (0.2,5),
-    "KMNADPH": (0.2,5),
-    "KMCO2": (0.2,5),
-    "KIO2": (0.2,5),
-    "KMO2": (0.2,5),
-    "KICO2": (0.2,5),
-    "vCBB_max": (0.2,5),
-    "kPR": (0.2,5),
+    # "vOxy_max": (0.2,5),
+    # "KMATP": (0.2,5),
+    # "KMNADPH": (0.2,5),
+    # "KMCO2": (0.2,5),
+    # "KIO2": (0.2,5),
+    # "KMO2": (0.2,5),
+    # "KICO2": (0.2,5),
+    # "vCBB_max": (0.2,5),
+    # "kPR": (0.2,5),
     "kUnquench": (0.2,5),  # manually fitted
     "KMUnquench": (0.2,5),  # manually fitted
     "kQuench": (0.2,5),  # manually fitted
     "KHillFdred": (0.2,5),  # manually fitted
     "nHillFdred": (0.2,5),  # manually fitted
-    "k_O2": (0.2,5),
-    "cChl": (0.2,5),
-    "CO2ext_pp": (0.2,5),
-    "S": (0.2,5),
+    # "k_O2": (0.2,5),
+    # "cChl": (0.2,5),
+    # "CO2ext_pp": (0.2,5),
+    # "S": (0.2,5),
     "kCBBactivation": (0.2,5),  # manually fitted
     "KMFdred": (0.2,5),  # manually fitted
     "kOCPactivation": (0.2,5),  # manually fitted

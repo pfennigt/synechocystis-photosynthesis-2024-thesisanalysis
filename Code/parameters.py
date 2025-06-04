@@ -129,3 +129,37 @@ y0u = { # Update-module initial concentrations
     'CO2': 3.103, # [mmol mol(Chl)^-1] concentration of CO2 in the cell without activity of the CCM (estimated)
     'OCP': 0.000e+00, # [unitless] initial activity of OCP (guess)
 }
+
+# Set the new, optimized parameters
+optimised_parameters = {'fCin': 1007.480140962421,
+ 'k_F1': 0.9710985504818648,
+ 'k_Q': 1926.6354700975216,
+ 'k_pass': 0.0109421377495846,
+ 'k_aa': 1.0824173854874954,
+ 'fluo_influence': {'PS2': 1.0123470031223243,
+  'PS1': 1.000474434651934,
+  'PBS': 1.1813564078925864},
+ 'lcf': 0.491680577763777,
+ 'KMPGA': 0.1022805570888928,
+ 'kATPsynth': 9.856102798977538,
+ 'kATPconsumption': 0.307802252565923,
+ 'kNADHconsumption': 9.099658241632694,
+ 'kUnquench': 0.1088678652135386,
+ 'KMUnquench': 0.1954603252418119,
+ 'kQuench': 0.0020618531622853,
+ 'KHillFdred': 35.460798125874604,
+ 'nHillFdred': 4.385737906127636,
+ 'kCBBactivation': 0.0332312358658122,
+ 'KMFdred': 0.2816471021423399,
+ 'kOCPactivation': 0.0001015537827701,
+ 'kOCPdeactivation': 0.0014483560448419,
+ 'OCPmax': 0.2638083296902586,
+ 'vNQ_max': 53.27784786129794,
+ 'KMNQ_Qox': 1.3469718883436077,
+ 'KMNQ_Fdred': 1.3871612044138393}
+
+# Update the parameter sets
+p.update({key:optimised_parameters[key] for key in p if key in optimised_parameters})
+pu.update({key:optimised_parameters[key] for key in pu if key in optimised_parameters})
+y0.update({key:optimised_parameters[key] for key in y0 if key in optimised_parameters})
+y0u.update({key:optimised_parameters[key] for key in y0u if key in optimised_parameters})

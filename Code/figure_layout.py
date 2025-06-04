@@ -37,9 +37,9 @@ def rcfac(rckwarg: str, factor: float):
 # Set the default parameters for plots
 
 # Generally halve the size and width of fonts, lines, etc.
-plt.rcParams.update(
-    {k:v*scaling_factor for k,v in plt.rcParams.items() if (k.endswith("size") or k.endswith("width") or k.endswith("pad")) and isinstance(v, (int, float))}
-)
+# plt.rcParams.update(
+#     {k:v*scaling_factor for k,v in plt.rcParams.items() if (k.endswith("size") or k.endswith("width") or k.endswith("pad")) and isinstance(v, (int, float))}
+# )
 
 # plt.rcParams.update({
 #     "font.size": 5,

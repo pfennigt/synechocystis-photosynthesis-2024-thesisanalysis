@@ -34,10 +34,10 @@ from SMTPMailSender import SMTPMailSender
 # Set the maximum number of parallel threads and the timeout
 # n_workers = 4 # Maximum number of parallel threads
 # timeout = 300 # Timeout for each thread in seconds
-timeout_s = (2 * 24 * 60 * 60) # Timeout for minimisation in seconds, default 172800 (two days)
+timeout_s = (7 * 24 * 60 * 60) # Timeout for minimisation in seconds, default 172800 (two days)
 
 # Set the prefix to be used for logging and results files
-file_prefix = f"minimise_allpar_{datetime.now().strftime('%Y%m%d%H%M')}"
+file_prefix = f"minimise_manfit_oldpar_{datetime.now().strftime('%Y%m%d%H%M')}"
 # file_prefix = f"residuals_test"
 
 # Setup the email sender
@@ -99,68 +99,68 @@ def get_fitting_parameter_dict(values, names):
 # }
 
 fitting_parameter_bounds = {
-    "PSIItot": (1e-10, None),
-    "PSItot": (1e-10, None),
-    "Q_tot": (1e-10, None),
-    "PC_tot": (1e-10, None),
-    "Fd_tot": (1e-10, None),
-    "NADP_tot": (1e-10, None),
-    "NAD_tot": (1e-10, None),
-    "AP_tot": (1e-10, None),
-    "O2ext": (1e-10, None),
-    "bHi": (1e-10, None),
-    "bHo": (1e-10, None),
-    "cf_lumen": (1e-10, None),
-    "cf_cytoplasm": (1e-10, None),
+    # "PSIItot": (1e-10, None),
+    # "PSItot": (1e-10, None),
+    # "Q_tot": (1e-10, None),
+    # "PC_tot": (1e-10, None),
+    # "Fd_tot": (1e-10, None),
+    # "NADP_tot": (1e-10, None),
+    # "NAD_tot": (1e-10, None),
+    # "AP_tot": (1e-10, None),
+    # "O2ext": (1e-10, None),
+    # "bHi": (1e-10, None),
+    # "bHo": (1e-10, None),
+    # "cf_lumen": (1e-10, None),
+    # "cf_cytoplasm": (1e-10, None),
     "fCin": (1e-10, None), # manually fit
-    "kH0": (1e-10, None),
-    "kHst": (1e-10, None),
-    "kF": (1e-10, None),
-    "k2": (1e-10, None),
-    "kPQred": (1e-10, None),
-    "kPCox": (1e-10, None),
-    "kFdred": (1e-10, None),
+    # "kH0": (1e-10, None),
+    # "kHst": (1e-10, None),
+    # "kF": (1e-10, None),
+    # "k2": (1e-10, None),
+    # "kPQred": (1e-10, None),
+    # "kPCox": (1e-10, None),
+    # "kFdred": (1e-10, None),
     "k_F1": (1e-10, None), # manually fit
-    "k_ox1": (1e-10, None),
+    # "k_ox1": (1e-10, None),
     "k_Q": (1e-10, None), # manually fit
-    "k_NDH": (1e-10, None),
-    "k_SDH": (1e-10, None),
-    "k_FN_fwd": (1e-10, None),
-    "k_FN_rev": (1e-10, None),
+    # "k_NDH": (1e-10, None),
+    # "k_SDH": (1e-10, None),
+    # "k_FN_fwd": (1e-10, None),
+    # "k_FN_rev": (1e-10, None),
     "k_pass": (1e-10, None), # manually fit
     "k_aa": (1e-10, None), # manually fit
-    "kRespiration": (1e-10, None),
-    "kO2out": (1e-10, None),
-    "kCCM": (1e-10, None),
+    # "kRespiration": (1e-10, None),
+    # "kO2out": (1e-10, None),
+    # "kCCM": (1e-10, None),
     "fluo_influence": (1e-10, None), # manually fit
-    "PBS_free": (1e-10, None),
-    "PBS_PS1": (1e-10, None),
-    "PBS_PS2": (1e-10, None),
+    # "PBS_free": (1e-10, None),
+    # "PBS_PS1": (1e-10, None),
+    # "PBS_PS2": (1e-10, None),
     "lcf": (1e-10, None), # manually fit
     "KMPGA": (1e-10, None), # manually fit
     "kATPsynth": (1e-10, None), # manually fit
-    "Pi_mol": (1e-10, None),
-    "HPR": (1e-10, None),
+    # "Pi_mol": (1e-10, None),
+    # "HPR": (1e-10, None),
     "kATPconsumption": (1e-10, None), # manually fit
     "kNADHconsumption": (1e-10, None), # manually fit
-    "vOxy_max": (1e-10, None),
-    "KMATP": (1e-10, None),
-    "KMNADPH": (1e-10, None),
-    "KMCO2": (1e-10, None),
-    "KIO2": (1e-10, None),
-    "KMO2": (1e-10, None),
-    "KICO2": (1e-10, None),
-    "vCBB_max": (1e-10, None),
-    "kPR": (1e-10, None),
+    # "vOxy_max": (1e-10, None),
+    # "KMATP": (1e-10, None),
+    # "KMNADPH": (1e-10, None),
+    # "KMCO2": (1e-10, None),
+    # "KIO2": (1e-10, None),
+    # "KMO2": (1e-10, None),
+    # "KICO2": (1e-10, None),
+    # "vCBB_max": (1e-10, None),
+    # "kPR": (1e-10, None),
     "kUnquench": (1e-10, None), # manually fit
     "KMUnquench": (1e-10, None), # manually fit
     "kQuench": (1e-10, None), # manually fit
     "KHillFdred": (1e-10, None), # manually fit
     "nHillFdred": (1e-10, None), # manually fit
-    "k_O2": (1e-10, None),
-    "cChl": (1e-10, None),
-    "CO2ext_pp": (1e-10, None),
-    "S": (1e-10, None),
+    # "k_O2": (1e-10, None),
+    # "cChl": (1e-10, None),
+    # "CO2ext_pp": (1e-10, None),
+    # "S": (1e-10, None),
     "kCBBactivation": (1e-10, None), # manually fit
     "KMFdred": (1e-10, None), # manually fit
     "kOCPactivation": (1e-10, None), # manually fit

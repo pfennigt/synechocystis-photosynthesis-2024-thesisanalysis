@@ -112,7 +112,8 @@ thesis_figures["stmodels_analysis"] = {"main": plt.figure(figsize=figsize(1, 0.5
 
 thesis_figures["stmodels_analysis_PQvsFm"] = {"main": plt.figure(figsize=figsize(1, 1))}
 
-thesis_figures["stmodels_analysis_multilight"] = {"main": plt.figure(figsize=figsize(1, 0.5))}
+# thesis_figures["stmodels_analysis_multilight"] = {"main": plt.figure(figsize=figsize(1, 0.5))}
+thesis_figures["stmodels_analysis_multilight"] = {"main": plt.figure(figsize=figsize(1, 1))}
 # # Create figure 3
 # fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.2))
 # gs = fig.add_gridspec(2,1, height_ratios=[1,0.3])

@@ -121,6 +121,10 @@ thesis_figures["CO2fix_mono"] = {"main": plt.figure(figsize=figsize(1, 1))}
 
 # Create figure 10
 thesis_figures["Biotech_prod"] = {"main": plt.figure(figsize=figsize(1, 1.5))}
+
+# Create figure 11
+thesis_figures["PAM_singles"] = {"main": plt.figure(figsize=figsize(1, 1))}
+
 # # Create figure 3
 # fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.2))
 # gs = fig.add_gridspec(2,1, height_ratios=[1,0.3])

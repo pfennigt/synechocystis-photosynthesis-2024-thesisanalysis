@@ -125,6 +125,27 @@ thesis_figures["Biotech_prod"] = {"main": plt.figure(figsize=figsize(1, 1.5))}
 # Create figure 11
 thesis_figures["PAM_singles"] = {"main": plt.figure(figsize=figsize(1, 1))}
 
+# Create figure 12
+thesis_figures["PAM_adapted"] = {"main": plt.figure(figsize=figsize(1, 1))}
+
+# Create figure 13
+thesis_figures["PAM_validation"] = {"main": plt.figure(figsize=figsize(1, 1))}
+
+# Create figure 14
+thesis_figures["efluxes_main"] = {"main": plt.figure(figsize=figsize(1, 1))}
+
+# Create figure 15
+thesis_figures["efluxes_analysis_add"] = {"main": plt.figure(figsize=figsize(1.5, 1))}
+
+# Create figure 16
+thesis_figures["efluxes_analysis"] = {"main": plt.figure(figsize=figsize(1, 1))}
+
+# Create figure 17
+thesis_figures["O2fluxes"] = {"main": plt.figure(figsize=figsize(1, 0.9))}
+
+# Create figure 18
+thesis_figures["Benschop"] = {"main": plt.figure(figsize=figsize(1, 0.9))}
+
 # # Create figure 3
 # fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.2))
 # gs = fig.add_gridspec(2,1, height_ratios=[1,0.3])

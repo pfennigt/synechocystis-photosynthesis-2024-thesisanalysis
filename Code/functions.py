@@ -729,6 +729,7 @@ def add_lightbar(
     annotation_twoline=True,
     annotation_light_c="k",
     annotation_size=None,
+    annotation_text_color=None,
     color="bw",
     size=0.06,
     scale="linear",
@@ -983,7 +984,7 @@ def add_lightbar(
                     size=size * 140 if annotation_size is None else annotation_size,
                     ha="center",
                     va="center",
-                    c=c,
+                    c=c if annotation_text_color is None else annotation_text_color,
                 )
 
     return ax

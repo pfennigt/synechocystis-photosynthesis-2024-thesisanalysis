@@ -200,6 +200,27 @@ thesis_figures["Minimize_comparison"] = {
     "D": sfig4,
 }
 
+# Create figure 26
+fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.5))
+gs = fig.add_gridspec(3,1, hspace=0.1)
+
+sfig1 = fig.add_subfigure(gs[0])
+label_figure(sfig1, pos=(0.1, 0.87), label="A")
+sfig2 = fig.add_subfigure(gs[1])
+label_figure(sfig2, pos=(0.1, 0.85), label="B")
+sfig3 = fig.add_subfigure(gs[2])
+label_figure(sfig3, pos=(0.1, 0.85), label="C")
+
+thesis_figures["Montecarlo_main_allpar"] = {
+    "main": fig,
+    "A": sfig1,
+    "B": sfig2,
+    "C": sfig3,
+}
+
+# Create figure 27
+thesis_figures["Montecarlo_supp_allpar"] = {"main": plt.figure(figsize=figsize(1, 1.5))}
+
 # # Create figure 22
 # fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.5))
 # gs = fig.add_gridspec(3,1, hspace=0.1)

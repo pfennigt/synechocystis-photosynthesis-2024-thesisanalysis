@@ -268,6 +268,10 @@ minimiser_options = {
     "Nelder-Mead": {
         "method":"Nelder-Mead",
         "callback": callback,
+        "options":{
+            "maxiter": 50000,
+            "maxfev": 50000,
+        }
     },
     "trust-constr": {
         "method": "trust-constr",

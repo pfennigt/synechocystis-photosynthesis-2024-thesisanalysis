@@ -146,6 +146,54 @@ thesis_figures["O2fluxes"] = {"main": plt.figure(figsize=figsize(1, 0.9))}
 # Create figure 18
 thesis_figures["Benschop"] = {"main": plt.figure(figsize=figsize(1, 0.9))}
 
+# Create figure 19
+thesis_figures["Biotech_Rodrigures"] = {"main": plt.figure(figsize=figsize(1, 1))}
+
+# Create figure 20
+thesis_figures["Overexpression"] = {"main": plt.figure(figsize=figsize(1, 0.8))}
+
+# Create figure 21
+thesis_figures["Overexpression_mca"] = {"main": plt.figure(figsize=figsize(1, 1))}
+
+# Create figure 22
+fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.5))
+gs = fig.add_gridspec(3,1, hspace=0.1)
+
+sfig1 = fig.add_subfigure(gs[0])
+label_figure(sfig1, pos=(0.1, 0.87), label="A")
+sfig2 = fig.add_subfigure(gs[1])
+label_figure(sfig2, pos=(0.1, 0.85), label="B")
+sfig3 = fig.add_subfigure(gs[2])
+label_figure(sfig3, pos=(0.1, 0.85), label="C")
+
+thesis_figures["Montecarlo_main"] = {
+    "main": fig,
+    "A": sfig1,
+    "B": sfig2,
+    "C": sfig3,
+}
+
+# Create figure 23
+thesis_figures["Montecarlo_supp"] = {"main": plt.figure(figsize=figsize(1, 1.5))}
+
+# # Create figure 22
+# fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.5))
+# gs = fig.add_gridspec(3,1, hspace=0.1)
+
+# sfig1 = fig.add_subfigure(gs[0])
+# label_figure(sfig1, pos=(0.1, 0.95), label="A")
+# sfig2 = fig.add_subfigure(gs[1])
+# label_figure(sfig2, pos=(0.1, 0.95), label="B")
+# sfig3 = fig.add_subfigure(gs[2])
+# label_figure(sfig3, pos=(0.1, 0.95), label="C")
+
+# thesis_figures["Montecarlo_supp"] = {
+#     "main": fig,
+#     "A": sfig1,
+#     "B": sfig2,
+#     "C": sfig3,
+# }
+
 # # Create figure 3
 # fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.2))
 # gs = fig.add_gridspec(2,1, height_ratios=[1,0.3])

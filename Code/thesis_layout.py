@@ -155,7 +155,7 @@ thesis_figures["PAM_singles"] = {"main": plt.figure(figsize=figsize(1, 1))}
 thesis_figures["PAM_adapted"] = {"main": plt.figure(figsize=figsize(1, 1))}
 
 # Create figure 13
-thesis_figures["PAM_validation"] = {"main": plt.figure(figsize=figsize(1, 1))}
+thesis_figures["PAM_validation"] = {"main": plt.figure(figsize=figsize(1, 0.8))}
 
 # Create figure 14
 thesis_figures["efluxes_main"] = {"main": plt.figure(figsize=figsize(1, 1))}

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from cycler import cycler
+from matplotlib.colors import ListedColormap
 
 figsize_default = 7 # inches
 element_scaling = 0.5
@@ -10,6 +11,12 @@ element_scaling = 0.5
 def figsize(rel_width, rel_height):
     return (rel_width * figsize_default, rel_height * figsize_default)
 
+label_bbox=dict(
+        boxstyle='round,pad=0.1',  # Rounded corners
+        facecolor='white',         # White background
+        edgecolor='none',          # No border
+        alpha=0.7                  # Semi-transparency
+    )
 
 # Function for labelling figures with letters
 def label_figure(fig, pos, label, size=13):
@@ -20,7 +27,7 @@ def label_figure(fig, pos, label, size=13):
             pos = (0.98, 1.01)
     
     if isinstance(pos, tuple):
-        fig.text(*pos, label, size=size, weight="bold")
+        fig.text(*pos, label, size=size, weight="bold", bbox=label_bbox)
 
 def label_axis(ax, pos, label, size=13, ha=None, va="top"):
     if isinstance(pos, str):
@@ -32,7 +39,7 @@ def label_axis(ax, pos, label, size=13, ha=None, va="top"):
             ha="right"
     
     if isinstance(pos, tuple):
-        ax.text(*pos, label, size=size, transform=ax.transAxes, ha=ha, va=va, weight="bold")
+        ax.text(*pos, label, size=size, transform=ax.transAxes, ha=ha, va=va, weight="bold", bbox=label_bbox)
 
 def label_axes(axes, pos, start_label_int=0, size=13, ha=None):
     for i,ax in enumerate(axes.flatten()):
@@ -70,10 +77,13 @@ cmaps = ['Pastel1', 'Pastel2', 'Paired', 'Accent', 'Dark2', 'Set1', 'Set2', 'Set
 
 # 4
 default_cmap_index=4
-default_cmap = plt.get_cmap(cmaps[4])
+_default_cmap = plt.get_cmap(cmaps[4])
+default_cmap = ListedColormap([_default_cmap.colors[x] for x in [0,1,2,5,7]])
 default_cmap_colors = default_cmap.colors
 plt.rcParams['axes.prop_cycle'] = cycler('color', default_cmap_colors)
 
+plt.rcParams["figure.titleweight"] = "bold"
+# plt.rcParams["figure.titlesize"] = "x-large"
 
 # Define the figures
 thesis_figures = {}
@@ -83,11 +93,11 @@ fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1))
 gs = fig.add_gridspec(2,1, hspace=0.1, height_ratios=(1,0.9))
 
 sfig1 = fig.add_subfigure(gs[0])
-label_figure(sfig1, pos=(0.1, 0.87), label="A")
-label_figure(sfig1, pos=(0.54, 0.87), label="B")
+label_figure(sfig1, pos=(0.13, 0.87), label="A")
+label_figure(sfig1, pos=(0.57, 0.87), label="B")
 sfig2 = fig.add_subfigure(gs[1])
-label_figure(sfig2, pos=(0.1, 0.85), label="C")
-label_figure(sfig2, pos=(0.54, 0.85), label="D")
+label_figure(sfig2, pos=(0.13, 0.85), label="C")
+label_figure(sfig2, pos=(0.57, 0.85), label="D")
 
 thesis_figures["CBBcontrol"] = {
     "main": fig,

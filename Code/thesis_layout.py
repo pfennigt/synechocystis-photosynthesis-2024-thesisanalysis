@@ -164,10 +164,10 @@ thesis_figures["efluxes_main"] = {"main": plt.figure(figsize=figsize(1, 1))}
 thesis_figures["efluxes_analysis_add"] = {"main": plt.figure(figsize=figsize(1.5, 1))}
 
 # Create figure 16
-thesis_figures["efluxes_analysis"] = {"main": plt.figure(figsize=figsize(1, 1))}
+thesis_figures["efluxes_analysis"] = {"main": plt.figure(figsize=figsize(1, 0.8))}
 
 # Create figure 17
-thesis_figures["O2fluxes"] = {"main": plt.figure(figsize=figsize(1, 0.9))}
+thesis_figures["O2fluxes"] = {"main": plt.figure(figsize=figsize(1, 0.8))}
 
 # Create figure 18
 thesis_figures["Benschop"] = {"main": plt.figure(figsize=figsize(1, 0.9))}

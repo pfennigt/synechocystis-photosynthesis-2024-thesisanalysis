@@ -112,19 +112,35 @@ thesis_figures["mca_wldifference"] = {"main": plt.figure(figsize=figsize(1, 1))}
 thesis_figures["spectra_monochrom"] = {"main": plt.figure(figsize=figsize(1, 0.3))}
 
 # Create figure 4
-thesis_figures["CO2fix_spectra"] = {"main": plt.figure(figsize=figsize(0.5, 1))}
+thesis_figures["CO2fix_spectra"] = {"main": plt.figure(figsize=figsize(1, 0.5))}
 
 # Create figure 5
 thesis_figures["spectra_complex"] = {"main": plt.figure(figsize=figsize(1, 0.25))}
 
 # Create figure 6
-thesis_figures["stmodels_analysis"] = {"main": plt.figure(figsize=figsize(1, 0.5))}
+thesis_figures["stmodels_analysis"] = {"main": plt.figure(figsize=figsize(1, 0.35))}
+
+# fig = plt.figure(constrained_layout=True, figsize=figsize(1, 1.1))
+# gs = fig.add_gridspec(2,1, hspace=0.1, height_ratios=(1,1.5))
+
+# sfig1 = fig.add_subfigure(gs[0])
+# label_figure(sfig1, pos=(0.18, 0.84), label="A")
+# label_figure(sfig1, pos=(0.68, 0.84), label="B")
+# sfig2 = fig.add_subfigure(gs[1])
+# label_figure(sfig2, pos=(0.13, 0.85), label="C")
+# label_figure(sfig2, pos=(0.57, 0.85), label="D")
+
+# thesis_figures["stmodels_analysis"] = {
+#     "main": fig,
+#     "A": sfig1,
+#     "C": sfig2,
+# }
 
 # Create figure 7
 thesis_figures["stmodels_analysis_PQvsFm"] = {"main": plt.figure(figsize=figsize(1, 1))}
 
 # Create figure 8
-thesis_figures["stmodels_analysis_multilight"] = {"main": plt.figure(figsize=figsize(1, 1))}
+thesis_figures["stmodels_analysis_multilight"] = {"main": plt.figure(figsize=figsize(1, 0.8))}
 
 # Create figure 9
 thesis_figures["CO2fix_mono"] = {"main": plt.figure(figsize=figsize(1, 1))}
@@ -230,3 +246,6 @@ thesis_figures["Montecarlo_main_allpar"] = {
 
 # Create figure 27
 thesis_figures["Montecarlo_supp_allpar"] = {"main": plt.figure(figsize=figsize(1, 1.5))}
+
+# Create figure 28
+thesis_figures["spectrum_OCP"] = {"main": plt.figure(figsize=figsize(1, 0.3))}
